@@ -22,7 +22,7 @@ export async function renderHome(app) {
         : emptyRecent())}
     <div id="trendingSection" class="section">
       <div class="section__head">
-        <h2 class="section__title"><span class="dot"></span>Trending This Week</h2>
+        <h2 class="section__title"><span class="marquee-bullet"></span>Trending This Week</h2>
       </div>
       ${hasKey() ? loaderHtml : noKeyBanner()}
     </div>`;
@@ -105,7 +105,7 @@ function section(title, id, content) {
   return `
   <div class="section fade-in">
     <div class="section__head">
-      <h2 class="section__title"><span class="dot"></span>${title}</h2>
+      <h2 class="section__title"><span class="marquee-bullet"></span>${title}</h2>
     </div>
     ${content}
   </div>`;
