@@ -1,26 +1,96 @@
-/* ░░ storage.js — localStorage data layer for CINESTASH ░░
-   Everything the user owns lives here: profile, logs, watchlist, favorites,
-   and the TMDB api key. No backend needed → perfect for GitHub Pages. */
+/* ░░ storage.js — localStorage data layer ░░ */
 
 const KEY = 'cinestash:v1';
 
+/* ── Seed data ──────────────────────────────────── */
+const SEED_TAKES = {
+  155: [
+    { id:'s_155_1', username:'FilmBro420', text:"Heath Ledger only won the Oscar because he died. The Joker is just a guy doing a weird voice in clown makeup.", spice:4, agrees:12, disagrees:87, ts:1700000000000 },
+    { id:'s_155_2', username:'contrarian_cine', text:"The truck flip is literally the only impressive thing here. The rest is a Law & Order episode with a bigger budget.", spice:5, agrees:3, disagrees:201, ts:1700000001000 },
+  ],
+  27205: [
+    { id:'s_27205_1', username:'dreamskeptic', text:"The top falls. Nobody cares. The real plot hole is that Leo's character is insufferable in literally every scene.", spice:3, agrees:44, disagrees:130, ts:1700000002000 },
+    { id:'s_27205_2', username:'nolan_fatigue', text:"Nolan made a movie about dreams where nothing actually feels dreamlike. It's just a heist movie for people who think they're smart.", spice:4, agrees:68, disagrees:220, ts:1700000003000 },
+  ],
+  550: [
+    { id:'s_550_1', username:'soapbox_sally', text:"This movie is a manifesto for men who didn't get enough hugs. Brad Pitt is literally just wearing a leather jacket.", spice:4, agrees:22, disagrees:178, ts:1700000004000 },
+    { id:'s_550_2', username:'first_rule_club', text:"The twist was obvious from the first 20 minutes. I've seen better mindf***s in an IKEA instruction manual.", spice:5, agrees:9, disagrees:312, ts:1700000005000 },
+  ],
+  496243: [
+    { id:'s_496243_1', username:'subtitlehater99', text:"Every critic gave this 10/10 because they were scared of being called racist if they didn't. It's good but calm down.", spice:5, agrees:8, disagrees:303, ts:1700000006000 },
+    { id:'s_496243_2', username:'parasite_pete', text:"The ending ruins everything the first two hours built. Bong just rage quit his own screenplay.", spice:4, agrees:31, disagrees:145, ts:1700000007000 },
+  ],
+  157336: [
+    { id:'s_157336_1', username:'physicspolice', text:"Hans Zimmer turned the volume up to drown out McConaughey crying for three straight hours. The science is actual nonsense.", spice:3, agrees:91, disagrees:55, ts:1700000008000 },
+    { id:'s_157336_2', username:'wormhole_wendy', text:"'Love is a dimension.' Christopher Nolan should be banned from writing dialogue forever.", spice:5, agrees:204, disagrees:88, ts:1700000009000 },
+  ],
+  238: [
+    { id:'s_238_1', username:'mafia_meh', text:"It's three hours of men whispering to each other about pasta. I get it. They're very serious. We know.", spice:3, agrees:19, disagrees:455, ts:1700000010000 },
+  ],
+  680: [
+    { id:'s_680_1', username:'tarantino_tired', text:"People who say this is their favorite movie haven't seen more than 15 films in their life. It's film school bingo.", spice:4, agrees:37, disagrees:190, ts:1700000011000 },
+  ],
+};
+
+const DEMO_FRIENDS = [
+  {
+    id: 'friend_01', username: 'marlowe', displayName: 'Marlowe Ashford',
+    emoji: '🎭',
+    bio: 'Horror devotee. Will defend Rob Zombie\'s Halloween to the grave.',
+    logs: [
+      { movie:{ id:155, title:'The Dark Knight', year:'2008', poster:'/qJ2tW6WMUDux911r6m7haRef0WH.jpg' }, rating:4.5, review:'Still holds up.', watchedDate:'2026-06-14' },
+      { movie:{ id:27205, title:'Inception', year:'2010', poster:'/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg' }, rating:3, review:'Overrated but I get it.', watchedDate:'2026-06-10' },
+    ],
+  },
+  {
+    id: 'friend_02', username: 'sofia_reels', displayName: 'Sofia Navarro',
+    emoji: '🎬',
+    bio: 'Criterion stans rise up. No CGI ever.',
+    logs: [
+      { movie:{ id:496243, title:'Parasite', year:'2019', poster:'/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg' }, rating:5, review:'Absolute masterpiece.', watchedDate:'2026-06-15' },
+      { movie:{ id:238, title:'The Godfather', year:'1972', poster:'/3bhkrj58Vtu7enYsLeMLoNWmEQt.jpg' }, rating:5, review:'Cinema.', watchedDate:'2026-06-08' },
+    ],
+  },
+  {
+    id: 'friend_03', username: 'reel_antonio', displayName: 'Antonio Vega',
+    emoji: '🍿',
+    bio: '4DX or nothing. I need to feel the explosion.',
+    logs: [
+      { movie:{ id:157336, title:'Interstellar', year:'2014', poster:'/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg' }, rating:3, review:'The sound design gave me tinnitus.', watchedDate:'2026-06-15' },
+      { movie:{ id:550, title:'Fight Club', year:'1999', poster:'/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg' }, rating:4, review:'First time was wild.', watchedDate:'2026-06-12' },
+    ],
+  },
+  {
+    id: 'friend_04', username: 'priya_picks', displayName: 'Priya Patel',
+    emoji: '🌙',
+    bio: 'Watches two films a day. Sleeps never.',
+    logs: [
+      { movie:{ id:680, title:'Pulp Fiction', year:'1994', poster:'/d5iIlFn5s0ImszYzBPb8JPIfbXD.jpg' }, rating:4, review:'Timeless.', watchedDate:'2026-06-16' },
+    ],
+  },
+];
+
+/* ── Defaults ─────────────────────────────────── */
 const DEFAULTS = () => ({
   profile: {
     username: 'Cinephile',
     handle: 'you',
     bio: 'Building my stash, one film at a time.',
-    avatar: '',          // data URL or remote URL
-    background: '',       // banner image (data URL / remote URL)
+    avatar: '',
+    background: '',
   },
-  settings: {
-    tmdbKey: '',          // user's TMDB v3 API key
-  },
-  logs: [],               // [{ id, movie, rating, review, watchedDate, loggedAt, rewatch }]
-  watchlist: [],          // [{ ...movie, addedAt }]
-  favorites: [],          // [ movieId, ... ] ordered, max 8
-  favoriteMovies: {},     // { movieId: movie }  (cache so favorites render offline)
+  settings: { tmdbKey: '' },
+  logs: [],
+  watchlist: [],
+  favorites: [],
+  favoriteMovies: {},
+  hotTakes: {},
+  following: ['friend_01', 'friend_02'],
+  followers: ['friend_03', 'friend_04'],
+  demoFriendsSeeded: true,
 });
 
+/* ── Load / persist ───────────────────────────── */
 let state = load();
 
 function load() {
@@ -28,144 +98,152 @@ function load() {
     const raw = localStorage.getItem(KEY);
     if (!raw) return DEFAULTS();
     const parsed = JSON.parse(raw);
-    return { ...DEFAULTS(), ...parsed,
+    return {
+      ...DEFAULTS(), ...parsed,
       profile:  { ...DEFAULTS().profile,  ...(parsed.profile  || {}) },
       settings: { ...DEFAULTS().settings, ...(parsed.settings || {}) },
+      hotTakes: parsed.hotTakes || {},
+      following: parsed.following ?? ['friend_01','friend_02'],
+      followers: parsed.followers ?? ['friend_03','friend_04'],
     };
-  } catch {
-    return DEFAULTS();
-  }
+  } catch { return DEFAULTS(); }
 }
 
 function persist() {
-  try {
-    localStorage.setItem(KEY, JSON.stringify(state));
-  } catch (e) {
-    console.error('CINESTASH: could not save', e);
-  }
+  try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { console.error('CINESTASH save error', e); }
   window.dispatchEvent(new CustomEvent('cinestash:change'));
 }
 
-/* ── reads ─────────────────────────────────────────── */
-export const get = () => state;
-export const getProfile = () => state.profile;
-export const getSettings = () => state.settings;
-export const getLogs = () => [...state.logs].sort((a, b) => new Date(b.watchedDate) - new Date(a.watchedDate));
-export const getRecentLogs = () => [...state.logs].sort((a, b) => b.loggedAt - a.loggedAt);
-export const getWatchlist = () => [...state.watchlist].sort((a, b) => b.addedAt - a.addedAt);
-export const getFavorites = () => state.favorites.map(id => state.favoriteMovies[id]).filter(Boolean);
+/* ── Profile / settings ───────────────────────── */
+export const get            = () => state;
+export const getProfile     = () => state.profile;
+export const getSettings    = () => state.settings;
+export const updateProfile  = (p) => { state.profile  = { ...state.profile, ...p };  persist(); };
+export const updateSettings = (p) => { state.settings = { ...state.settings, ...p }; persist(); };
 
-export const isWatchlisted = (id) => state.watchlist.some(m => m.id === id);
-export const isFavorite = (id) => state.favorites.includes(id);
-export const getLogFor = (id) => getRecentLogs().find(l => l.movie.id === id) || null;
+/* ── Logs ─────────────────────────────────────── */
+export const getLogs      = () => [...state.logs].sort((a,b) => new Date(b.watchedDate) - new Date(a.watchedDate));
+export const getRecentLogs= () => [...state.logs].sort((a,b) => b.loggedAt - a.loggedAt);
+export const getLogFor    = (id) => getRecentLogs().find(l => l.movie.id === id) || null;
 export const getAllLogsFor = (id) => getRecentLogs().filter(l => l.movie.id === id);
 
 export const stats = () => {
-  const films = new Set(state.logs.map(l => l.movie.id)).size;
+  const films    = new Set(state.logs.map(l => l.movie.id)).size;
   const thisYear = new Date().getFullYear();
-  const yearCount = state.logs.filter(l => new Date(l.watchedDate).getFullYear() === thisYear).length;
-  return {
-    total: state.logs.length,
-    films,
-    thisYear: yearCount,
-    watchlist: state.watchlist.length,
-  };
+  const yearCount= state.logs.filter(l => new Date(l.watchedDate).getFullYear() === thisYear).length;
+  return { total: state.logs.length, films, thisYear: yearCount, watchlist: state.watchlist.length };
 };
 
-/* ── writes ────────────────────────────────────────── */
-export function updateProfile(patch) {
-  state.profile = { ...state.profile, ...patch };
-  persist();
-}
-
-export function updateSettings(patch) {
-  state.settings = { ...state.settings, ...patch };
-  persist();
-}
-
-export function logMovie(movie, { rating, review, watchedDate, rewatch = false, editId = null }) {
+export function logMovie(movie, { rating, review, watchedDate, rewatch=false, editId=null }) {
   if (editId) {
-    const existing = state.logs.find(l => l.id === editId);
-    if (existing) {
-      Object.assign(existing, { rating, review, watchedDate, rewatch });
-      persist();
-      return existing;
-    }
+    const e = state.logs.find(l => l.id === editId);
+    if (e) { Object.assign(e, { rating, review, watchedDate, rewatch }); persist(); return e; }
   }
   const entry = {
-    id: `log_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-    movie: slimMovie(movie),
-    rating, review, watchedDate, rewatch,
-    loggedAt: Date.now(),
+    id: `log_${Date.now()}_${Math.random().toString(36).slice(2,7)}`,
+    movie: slimMovie(movie), rating, review, watchedDate, rewatch, loggedAt: Date.now(),
   };
   state.logs.push(entry);
-  // logging removes it from the watchlist automatically
   state.watchlist = state.watchlist.filter(m => m.id !== movie.id);
-  persist();
-  return entry;
+  persist(); return entry;
 }
 
-export function deleteLog(logId) {
-  state.logs = state.logs.filter(l => l.id !== logId);
-  persist();
-}
+export function deleteLog(logId) { state.logs = state.logs.filter(l => l.id !== logId); persist(); }
+
+/* ── Watchlist ────────────────────────────────── */
+export const getWatchlist   = () => [...state.watchlist].sort((a,b) => b.addedAt - a.addedAt);
+export const isWatchlisted  = (id) => state.watchlist.some(m => m.id === id);
 
 export function toggleWatchlist(movie) {
   if (isWatchlisted(movie.id)) {
     state.watchlist = state.watchlist.filter(m => m.id !== movie.id);
-    persist();
-    return false;
+    persist(); return false;
   }
   state.watchlist.push({ ...slimMovie(movie), addedAt: Date.now() });
-  persist();
-  return true;
+  persist(); return true;
 }
+
+/* ── Favorites ────────────────────────────────── */
+export const getFavorites = () => state.favorites.map(id => state.favoriteMovies[id]).filter(Boolean);
+export const isFavorite   = (id) => state.favorites.includes(id);
 
 export function toggleFavorite(movie) {
   const id = movie.id;
   if (state.favorites.includes(id)) {
     state.favorites = state.favorites.filter(f => f !== id);
-    delete state.favoriteMovies[id];
-    persist();
-    return false;
+    delete state.favoriteMovies[id]; persist(); return false;
   }
-  if (state.favorites.length >= 8) {
-    return 'full';
-  }
+  if (state.favorites.length >= 8) return 'full';
   state.favorites.push(id);
   state.favoriteMovies[id] = slimMovie(movie);
-  persist();
-  return true;
+  persist(); return true;
 }
 
-export function reorderFavorites(orderedIds) {
-  state.favorites = orderedIds.filter(id => state.favoriteMovies[id]);
+/* ── Hot Takes ────────────────────────────────── */
+export function getHotTakes(movieId) {
+  const local = state.hotTakes[movieId] || [];
+  const seed  = SEED_TAKES[movieId] || [];
+  // merge seed + local, deduplicate by id
+  const map = new Map();
+  [...seed, ...local].forEach(t => map.set(t.id, t));
+  return [...map.values()].sort((a,b) => b.spice - a.spice || b.agrees - a.agrees);
+}
+
+export function addHotTake(movieId, { username, text, spice }) {
+  if (!state.hotTakes[movieId]) state.hotTakes[movieId] = [];
+  const take = {
+    id: `t_${Date.now()}_${Math.random().toString(36).slice(2,6)}`,
+    username, text, spice, agrees: 0, disagrees: 0, ts: Date.now(),
+  };
+  state.hotTakes[movieId].push(take);
+  persist(); return take;
+}
+
+export function voteHotTake(movieId, takeId, vote) {
+  // need to check both seeded and local
+  if (!state.hotTakes[movieId]) state.hotTakes[movieId] = [];
+  let take = state.hotTakes[movieId].find(t => t.id === takeId);
+  if (!take) {
+    // it's a seeded take — copy it to local so we can mutate
+    const seed = (SEED_TAKES[movieId] || []).find(t => t.id === takeId);
+    if (!seed) return;
+    take = { ...seed };
+    state.hotTakes[movieId].push(take);
+  }
+  if (vote === 'agree')    take.agrees++;
+  if (vote === 'disagree') take.disagrees++;
   persist();
 }
 
-/* keep only what we need to render cards — keeps storage tiny */
+/* ── Social: following / followers ───────────── */
+export const getFollowing  = () => state.following || [];
+export const getFollowers  = () => state.followers || [];
+export const getDemoFriends= () => DEMO_FRIENDS;
+export const isFollowing   = (id) => (state.following || []).includes(id);
+
+export function follow(userId) {
+  if (!state.following.includes(userId)) {
+    state.following.push(userId); persist();
+  }
+}
+export function unfollow(userId) {
+  state.following = state.following.filter(id => id !== userId);
+  persist();
+}
+
+/* ── Backup / restore ─────────────────────────── */
+export const exportData = () => JSON.stringify(state, null, 2);
+export function importData(json) { state = { ...DEFAULTS(), ...JSON.parse(json) }; persist(); }
+export function wipe()           { state = DEFAULTS(); persist(); }
+
+/* ── Utility ──────────────────────────────────── */
 function slimMovie(m) {
   return {
-    id: m.id,
-    title: m.title,
-    year: m.year || (m.release_date ? m.release_date.slice(0, 4) : ''),
-    poster: m.poster || m.poster_path || '',
-    backdrop: m.backdrop || m.backdrop_path || '',
+    id: m.id, title: m.title,
+    year:        m.year || (m.release_date ? m.release_date.slice(0,4) : ''),
+    poster:      m.poster || m.poster_path || '',
+    backdrop:    m.backdrop || m.backdrop_path || '',
     voteAverage: m.voteAverage ?? m.vote_average ?? null,
-    overview: m.overview || '',
+    overview:    m.overview || '',
   };
-}
-
-/* ── import / export (backup) ──────────────────────── */
-export function exportData() {
-  return JSON.stringify(state, null, 2);
-}
-export function importData(json) {
-  const parsed = JSON.parse(json);
-  state = { ...DEFAULTS(), ...parsed };
-  persist();
-}
-export function wipe() {
-  state = DEFAULTS();
-  persist();
 }

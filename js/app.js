@@ -1,27 +1,31 @@
 /* ░░ app.js — router + bootstrap ░░ */
 
+import { initTheme, toggleTheme, updateToggleBtn } from './themes.js';
 import { renderHome } from './pages/home.js';
 import { renderWatchlist } from './pages/watchlist.js';
 import { renderDiary } from './pages/diary.js';
 import { renderSearch } from './pages/search.js';
+import { renderFriends } from './pages/friends.js';
 import { openSettings } from './settings.js';
 import { openDetail } from './detail.js';
 import { initNavSearch } from './navsearch.js';
 
 const app = document.getElementById('app');
 
-/* ── router ─────────────────────────────────────────── */
+/* ── Theme ──────────────────────────────────────── */
+initTheme();
+
+/* ── Router ─────────────────────────────────────── */
 const ROUTES = {
   '/':          renderHome,
+  '/friends':   renderFriends,
   '/watchlist': renderWatchlist,
   '/diary':     renderDiary,
 };
 
 async function navigate(hash) {
-  // strip leading #
   const path = (hash || '#/').replace(/^#/, '') || '/';
 
-  // search?
   const searchMatch = path.match(/^\/search\?q=(.+)/);
   if (searchMatch) {
     const query = decodeURIComponent(searchMatch[1]);
@@ -35,41 +39,42 @@ async function navigate(hash) {
     setActiveNav(path);
     await renderer(app);
   } else {
-    // unknown → home
     window.location.hash = '#/';
   }
 }
 
 function setActiveNav(path) {
   document.querySelectorAll('.nav__link[data-route]').forEach(el => {
-    const route = el.dataset.route;
-    const matches = (route === 'home' && (path === '/' || !path)) ||
-                    (route !== 'home' && path === `/${route}`);
+    const route   = el.dataset.route;
+    const matches = (route === 'home'    && (path === '/' || !path)) ||
+                    (route === 'friends'  && path === '/friends') ||
+                    (route === 'watchlist'&& path === '/watchlist') ||
+                    (route === 'diary'    && path === '/diary');
     el.classList.toggle('is-active', matches);
   });
 }
 
-/* ── nav search integration ──────────────────────────── */
+/* ── Nav search ──────────────────────────────────── */
 initNavSearch(
   movie => openDetail(movie),
-  query => {
-    window.location.hash = `#/search?q=${encodeURIComponent(query)}`;
-  }
+  query => { window.location.hash = `#/search?q=${encodeURIComponent(query)}`; }
 );
 
-/* ── hash routing ───────────────────────────────────── */
-window.addEventListener('hashchange', () => navigate(window.location.hash));
+/* ── Routing events ──────────────────────────────── */
+window.addEventListener('hashchange', () => { window.scrollTo({ top: 0, behavior: 'smooth' }); navigate(window.location.hash); });
 navigate(window.location.hash);
 
-/* ── cinestash:change → re-render current view ──────── */
-window.addEventListener('cinestash:change', () => {
-  navigate(window.location.hash);
+/* ── Re-render on data change ────────────────────── */
+window.addEventListener('cinestash:change', () => navigate(window.location.hash));
+
+/* ── Buttons ─────────────────────────────────────── */
+document.getElementById('settingsBtn')?.addEventListener('click', openSettings);
+document.getElementById('themeBtn')?.addEventListener('click', () => {
+  toggleTheme();
+  updateToggleBtn(document.documentElement.dataset.theme);
 });
 
-/* ── settings button ─────────────────────────────────── */
-document.getElementById('settingsBtn')?.addEventListener('click', openSettings);
-
-/* ── SPA link handler ─────────────────────────────────── */
+/* ── SPA link handler ────────────────────────────── */
 document.body.addEventListener('click', e => {
   const link = e.target.closest('[data-link]');
   if (link) {
@@ -78,6 +83,3 @@ document.body.addEventListener('click', e => {
     if (href) window.location.hash = href.startsWith('#') ? href : `#${href}`;
   }
 });
-
-/* ── scroll to top on navigation ─────────────────────── */
-window.addEventListener('hashchange', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
