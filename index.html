@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://api.themoviedb.org" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Monoton&family=Bebas+Neue&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="./css/styles.css" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>" />
 </head>
@@ -23,20 +23,20 @@
         <!-- film reel SVG logo -->
         <svg class="brand__logo" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <rect width="36" height="36" rx="9" fill="#FF2D55"/>
-          <!-- outer ring -->
-          <circle cx="18" cy="18" r="11" stroke="white" stroke-width="1.8" fill="none"/>
-          <!-- center hub -->
-          <circle cx="18" cy="18" r="3.2" fill="white"/>
-          <!-- spokes -->
-          <line x1="18" y1="7" x2="18" y2="11" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
-          <line x1="18" y1="25" x2="18" y2="29" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
-          <line x1="7" y1="18" x2="11" y2="18" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
-          <line x1="25" y1="18" x2="29" y2="18" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
-          <!-- sprocket holes at 45° -->
-          <circle cx="10.45" cy="10.45" r="1.5" fill="white"/>
-          <circle cx="25.55" cy="10.45" r="1.5" fill="white"/>
-          <circle cx="10.45" cy="25.55" r="1.5" fill="white"/>
-          <circle cx="25.55" cy="25.55" r="1.5" fill="white"/>
+          <!-- neon marquee sign body -->
+          <rect x="8.5" y="10.5" width="19" height="13" rx="2.2" stroke="white" stroke-width="1.6" fill="none"/>
+          <!-- marquee bulbs (top + bottom rows) -->
+          <circle cx="12" cy="10.5" r="1.05" fill="white"/>
+          <circle cx="18" cy="10.5" r="1.05" fill="white"/>
+          <circle cx="24" cy="10.5" r="1.05" fill="white"/>
+          <circle cx="12" cy="23.5" r="1.05" fill="white"/>
+          <circle cx="18" cy="23.5" r="1.05" fill="white"/>
+          <circle cx="24" cy="23.5" r="1.05" fill="white"/>
+          <!-- "now showing" play triangle -->
+          <path d="M16 14.2l5 2.8-5 2.8z" fill="white"/>
+          <!-- sign posts -->
+          <line x1="14" y1="23.5" x2="14" y2="28.5" stroke="white" stroke-width="1.6" stroke-linecap="round"/>
+          <line x1="22" y1="23.5" x2="22" y2="28.5" stroke="white" stroke-width="1.6" stroke-linecap="round"/>
         </svg>
         <span class="brand__name">CINE<em>STASH</em></span>
       </a>

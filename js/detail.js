@@ -89,7 +89,7 @@ function hotTakesSectionHtml(movieId) {
   <div class="hot-takes" id="hotTakesSection">
     <div class="hot-takes__head">
       <div class="hot-takes__title">
-        Hot Takes 🌶️
+        Saqib's Hot Takes 🌶️
         ${takes.length ? `<span class="hot-takes__badge">${takes.length}</span>` : ''}
       </div>
       <button class="btn btn--ghost btn--sm" id="showTakeFormBtn">+ Drop a Take</button>
@@ -112,7 +112,7 @@ function hotTakesSectionHtml(movieId) {
 }
 
 function renderTakesList(takes, movieId) {
-  if (!takes.length) return `<div class="hot-takes__empty">No takes yet — be the first to drop one 🌶️</div>`;
+  if (!takes.length) return `<div class="hot-takes__empty">Saqib hasn't roasted this one yet 🌶️ — drop your own take below.</div>`;
   return takes.map(t => `
   <div class="take-card" data-take-id="${t.id}">
     <div class="take-card__header">
