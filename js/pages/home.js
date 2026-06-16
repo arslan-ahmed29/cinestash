@@ -5,13 +5,11 @@ import { getProfile, getFavorites, getRecentLogs, stats, updateProfile,
          follow, unfollow, isFollowing,
          removeFollower, blockUser, unblockUser, getBlocked, isBlocked,
          isPrivate, setPrivacy } from '../storage.js';
-import { trending, hasKey } from '../api.js';
+import { trending } from '../api.js';
 import { cardHtml, carouselHtml, attachCarouselNav, toast, esc, fileToDataUrl, loaderHtml } from '../ui.js';
 import { openModal, closeModal } from '../ui.js';
 import { openDetail } from '../detail.js';
 import { openLogForm } from '../logform.js';
-
-const IMG_W92 = 'https://image.tmdb.org/t/p/w92';
 
 export async function renderHome(app) {
   const profile  = getProfile();
@@ -65,9 +63,9 @@ export async function renderHome(app) {
   const trendSection = document.createElement('div');
   trendSection.id = 'trendingSection';
   trendSection.className = 'section';
-  trendSection.innerHTML = `<div class="section__head"><h2 class="section__title">Trending This Week</h2></div>${hasKey() ? loaderHtml : noKeyBanner()}`;
+  trendSection.innerHTML = `<div class="section__head"><h2 class="section__title">Trending This Week</h2></div>${loaderHtml}`;
   document.getElementById('profileTabContent')?.appendChild(trendSection);
-  if (hasKey()) loadTrending();
+  loadTrending();
 }
 
 /* ── Tabs ─────────────────────────────────────── */
@@ -118,7 +116,7 @@ function friendsTabHtml() {
   return `
   <div class="friends-feed" style="margin-top:8px">
     ${items.filter(i => i.followed).slice(0, 12).map(({ friend, log }) => {
-      const imgP = log.movie.poster ? `${IMG_W92}${log.movie.poster}` : '';
+      const imgP = log.movie.poster || '';
       const stars = log.rating ? starsHtml(log.rating) : '';
       return `
       <div class="friend-item" data-movie-id="${log.movie.id}" data-title="${esc(log.movie.title)}" data-year="${esc(log.movie.year)}" data-poster="${esc(log.movie.poster||'')}" role="button" tabindex="0">
@@ -141,7 +139,7 @@ function friendsTabHtml() {
 function bindFriendTabEvents(root) {
   root.addEventListener('click', e => {
     const item = e.target.closest('.friend-item[data-movie-id]');
-    if (item) openDetail({ id: parseInt(item.dataset.movieId), title: item.dataset.title, year: item.dataset.year, poster: item.dataset.poster });
+    if (item) openDetail({ id: item.dataset.movieId, title: item.dataset.title, year: item.dataset.year, poster: item.dataset.poster });
   });
 }
 
@@ -398,7 +396,7 @@ async function loadTrending() {
     bindCardEvents(sec);
   } catch (e) {
     const placeholder = sec.querySelector('.loader');
-    if (placeholder) placeholder.innerHTML = '<p style="color:var(--sys-red);font-size:14px;padding:16px">Failed to load trending — check your API key in Settings.</p>';
+    if (placeholder) placeholder.innerHTML = '<p style="color:var(--sys-red);font-size:14px;padding:16px">Failed to load trending — check your connection.</p>';
   }
 }
 
@@ -409,12 +407,6 @@ function emptyFavs() {
 function emptyRecent() {
   return `<div class="empty"><div class="empty__icon">🎬</div><div class="empty__title">Your stash is empty</div><div class="empty__text">Search for a film and log it to start your CINESTASH.</div></div>`;
 }
-function noKeyBanner() {
-  return `<div class="no-key-banner" style="margin-top:16px">
-    Add your free <strong>TMDB API key</strong> in <button class="btn btn--ghost btn--sm" id="openSettingsFromHome" style="display:inline-flex;padding:4px 8px">Settings</button> to unlock search and trending.
-  </div>`;
-}
-
 /* ── Profile editing ──────────────────────────── */
 function bindProfileEdits() {
   document.getElementById('editBannerBtn')?.addEventListener('click', () => document.getElementById('bannerFileInput')?.click());
@@ -480,12 +472,10 @@ export function bindCardEvents(root) {
 
 function extractMovieFromCard(card) {
   if (!card) return {};
-  const imgStyle = card.querySelector('.card__poster')?.style.backgroundImage || '';
-  const posterPath = imgStyle.match(/url\(['"]?.*?(\/.+?)['"]?\)/)?.[1] || '';
   return {
-    id: parseInt(card.dataset.movieId),
-    title: card.querySelector('.card__title')?.textContent || '',
-    year:  card.querySelector('.card__sub')?.textContent?.replace(' ◆','').trim() || '',
-    poster: posterPath,
+    id:     card.dataset.movieId || '',
+    title:  card.querySelector('.card__title')?.textContent || '',
+    year:   card.querySelector('.card__sub')?.textContent?.replace(' ◆','').trim() || '',
+    poster: card.dataset.poster || '',
   };
 }

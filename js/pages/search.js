@@ -8,7 +8,7 @@ export async function renderSearch(app, query) {
   app.innerHTML = `
   <div class="page-head fade-in">
     <h1 class="page-head__title">Results for "${esc(query)}"</h1>
-    <p class="page-head__sub">Searching TMDB…</p>
+    <p class="page-head__sub">Searching IMDb…</p>
   </div>
   ${loaderHtml}`;
 
@@ -39,9 +39,7 @@ export async function renderSearch(app, query) {
   } catch (e) {
     const loader = app.querySelector('.loader');
     if (loader) loader.remove();
-    const msg = e.code === 'NO_KEY' ? 'Add your TMDB API key in Settings to search.'
-              : e.code === 'BAD_KEY' ? 'Invalid TMDB API key — check Settings.'
-              : 'Search failed. Check your connection.';
+    const msg = 'Search failed. Check your connection.';
     app.insertAdjacentHTML('beforeend', `
       <div class="empty fade-in">
         <div class="empty__icon">⚠️</div>

@@ -4,31 +4,31 @@ const KEY = 'cinestash:v1';
 
 /* ── Seed data ──────────────────────────────────── */
 const SEED_TAKES = {
-  155: [
-    { id:'s_155_1', username:'FilmBro420', text:"Heath Ledger only won the Oscar because he died. The Joker is just a guy doing a weird voice in clown makeup.", spice:4, agrees:12, disagrees:87, ts:1700000000000 },
-    { id:'s_155_2', username:'contrarian_cine', text:"The truck flip is literally the only impressive thing here. The rest is a Law & Order episode with a bigger budget.", spice:5, agrees:3, disagrees:201, ts:1700000001000 },
+  'tt0468569': [
+    { id:'s_dk_1', username:'FilmBro420', text:"Heath Ledger only won the Oscar because he died. The Joker is just a guy doing a weird voice in clown makeup.", spice:4, agrees:12, disagrees:87, ts:1700000000000 },
+    { id:'s_dk_2', username:'contrarian_cine', text:"The truck flip is literally the only impressive thing here. The rest is a Law & Order episode with a bigger budget.", spice:5, agrees:3, disagrees:201, ts:1700000001000 },
   ],
-  27205: [
-    { id:'s_27205_1', username:'dreamskeptic', text:"The top falls. Nobody cares. The real plot hole is that Leo's character is insufferable in literally every scene.", spice:3, agrees:44, disagrees:130, ts:1700000002000 },
-    { id:'s_27205_2', username:'nolan_fatigue', text:"Nolan made a movie about dreams where nothing actually feels dreamlike. It's just a heist movie for people who think they're smart.", spice:4, agrees:68, disagrees:220, ts:1700000003000 },
+  'tt1375666': [
+    { id:'s_inc_1', username:'dreamskeptic', text:"The top falls. Nobody cares. The real plot hole is that Leo's character is insufferable in literally every scene.", spice:3, agrees:44, disagrees:130, ts:1700000002000 },
+    { id:'s_inc_2', username:'nolan_fatigue', text:"Nolan made a movie about dreams where nothing actually feels dreamlike. It's just a heist movie for people who think they're smart.", spice:4, agrees:68, disagrees:220, ts:1700000003000 },
   ],
-  550: [
-    { id:'s_550_1', username:'soapbox_sally', text:"This movie is a manifesto for men who didn't get enough hugs. Brad Pitt is literally just wearing a leather jacket.", spice:4, agrees:22, disagrees:178, ts:1700000004000 },
-    { id:'s_550_2', username:'first_rule_club', text:"The twist was obvious from the first 20 minutes. I've seen better mindf***s in an IKEA instruction manual.", spice:5, agrees:9, disagrees:312, ts:1700000005000 },
+  'tt0137523': [
+    { id:'s_fc_1', username:'soapbox_sally', text:"This movie is a manifesto for men who didn't get enough hugs. Brad Pitt is literally just wearing a leather jacket.", spice:4, agrees:22, disagrees:178, ts:1700000004000 },
+    { id:'s_fc_2', username:'first_rule_club', text:"The twist was obvious from the first 20 minutes. I've seen better mindf***s in an IKEA instruction manual.", spice:5, agrees:9, disagrees:312, ts:1700000005000 },
   ],
-  496243: [
-    { id:'s_496243_1', username:'subtitlehater99', text:"Every critic gave this 10/10 because they were scared of being called racist if they didn't. It's good but calm down.", spice:5, agrees:8, disagrees:303, ts:1700000006000 },
-    { id:'s_496243_2', username:'parasite_pete', text:"The ending ruins everything the first two hours built. Bong just rage quit his own screenplay.", spice:4, agrees:31, disagrees:145, ts:1700000007000 },
+  'tt6751668': [
+    { id:'s_par_1', username:'subtitlehater99', text:"Every critic gave this 10/10 because they were scared of being called racist if they didn't. It's good but calm down.", spice:5, agrees:8, disagrees:303, ts:1700000006000 },
+    { id:'s_par_2', username:'parasite_pete', text:"The ending ruins everything the first two hours built. Bong just rage quit his own screenplay.", spice:4, agrees:31, disagrees:145, ts:1700000007000 },
   ],
-  157336: [
-    { id:'s_157336_1', username:'physicspolice', text:"Hans Zimmer turned the volume up to drown out McConaughey crying for three straight hours. The science is actual nonsense.", spice:3, agrees:91, disagrees:55, ts:1700000008000 },
-    { id:'s_157336_2', username:'wormhole_wendy', text:"'Love is a dimension.' Christopher Nolan should be banned from writing dialogue forever.", spice:5, agrees:204, disagrees:88, ts:1700000009000 },
+  'tt0816692': [
+    { id:'s_int_1', username:'physicspolice', text:"Hans Zimmer turned the volume up to drown out McConaughey crying for three straight hours. The science is actual nonsense.", spice:3, agrees:91, disagrees:55, ts:1700000008000 },
+    { id:'s_int_2', username:'wormhole_wendy', text:"'Love is a dimension.' Christopher Nolan should be banned from writing dialogue forever.", spice:5, agrees:204, disagrees:88, ts:1700000009000 },
   ],
-  238: [
-    { id:'s_238_1', username:'mafia_meh', text:"It's three hours of men whispering to each other about pasta. I get it. They're very serious. We know.", spice:3, agrees:19, disagrees:455, ts:1700000010000 },
+  'tt0068646': [
+    { id:'s_gf_1', username:'mafia_meh', text:"It's three hours of men whispering to each other about pasta. I get it. They're very serious. We know.", spice:3, agrees:19, disagrees:455, ts:1700000010000 },
   ],
-  680: [
-    { id:'s_680_1', username:'tarantino_tired', text:"People who say this is their favorite movie haven't seen more than 15 films in their life. It's film school bingo.", spice:4, agrees:37, disagrees:190, ts:1700000011000 },
+  'tt0110912': [
+    { id:'s_pf_1', username:'tarantino_tired', text:"People who say this is their favorite movie haven't seen more than 15 films in their life. It's film school bingo.", spice:4, agrees:37, disagrees:190, ts:1700000011000 },
   ],
 };
 
@@ -38,8 +38,8 @@ const DEMO_FRIENDS = [
     emoji: '🎭',
     bio: 'Horror devotee. Will defend Rob Zombie\'s Halloween to the grave.',
     logs: [
-      { movie:{ id:155, title:'The Dark Knight', year:'2008', poster:'/qJ2tW6WMUDux911r6m7haRef0WH.jpg' }, rating:4.5, review:'Still holds up.', watchedDate:'2026-06-14' },
-      { movie:{ id:27205, title:'Inception', year:'2010', poster:'/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg' }, rating:3, review:'Overrated but I get it.', watchedDate:'2026-06-10' },
+      { movie:{ id:'tt0468569', title:'The Dark Knight', year:'2008', poster:'' }, rating:4.5, review:'Still holds up.', watchedDate:'2026-06-14' },
+      { movie:{ id:'tt1375666', title:'Inception', year:'2010', poster:'' }, rating:3, review:'Overrated but I get it.', watchedDate:'2026-06-10' },
     ],
   },
   {
@@ -47,8 +47,8 @@ const DEMO_FRIENDS = [
     emoji: '🎬',
     bio: 'Criterion stans rise up. No CGI ever.',
     logs: [
-      { movie:{ id:496243, title:'Parasite', year:'2019', poster:'/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg' }, rating:5, review:'Absolute masterpiece.', watchedDate:'2026-06-15' },
-      { movie:{ id:238, title:'The Godfather', year:'1972', poster:'/3bhkrj58Vtu7enYsLeMLoNWmEQt.jpg' }, rating:5, review:'Cinema.', watchedDate:'2026-06-08' },
+      { movie:{ id:'tt6751668', title:'Parasite', year:'2019', poster:'' }, rating:5, review:'Absolute masterpiece.', watchedDate:'2026-06-15' },
+      { movie:{ id:'tt0068646', title:'The Godfather', year:'1972', poster:'' }, rating:5, review:'Cinema.', watchedDate:'2026-06-08' },
     ],
   },
   {
@@ -56,8 +56,8 @@ const DEMO_FRIENDS = [
     emoji: '🍿',
     bio: '4DX or nothing. I need to feel the explosion.',
     logs: [
-      { movie:{ id:157336, title:'Interstellar', year:'2014', poster:'/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg' }, rating:3, review:'The sound design gave me tinnitus.', watchedDate:'2026-06-15' },
-      { movie:{ id:550, title:'Fight Club', year:'1999', poster:'/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg' }, rating:4, review:'First time was wild.', watchedDate:'2026-06-12' },
+      { movie:{ id:'tt0816692', title:'Interstellar', year:'2014', poster:'' }, rating:3, review:'The sound design gave me tinnitus.', watchedDate:'2026-06-15' },
+      { movie:{ id:'tt0137523', title:'Fight Club', year:'1999', poster:'' }, rating:4, review:'First time was wild.', watchedDate:'2026-06-12' },
     ],
   },
   {
@@ -65,7 +65,7 @@ const DEMO_FRIENDS = [
     emoji: '🌙',
     bio: 'Watches two films a day. Sleeps never.',
     logs: [
-      { movie:{ id:680, title:'Pulp Fiction', year:'1994', poster:'/d5iIlFn5s0ImszYzBPb8JPIfbXD.jpg' }, rating:4, review:'Timeless.', watchedDate:'2026-06-16' },
+      { movie:{ id:'tt0110912', title:'Pulp Fiction', year:'1994', poster:'' }, rating:4, review:'Timeless.', watchedDate:'2026-06-16' },
     ],
   },
 ];

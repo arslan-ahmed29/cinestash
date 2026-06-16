@@ -229,7 +229,7 @@ function skeletonHtml(m) {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
       </button>
       <div class="detail__top">
-        <div class="detail__poster skeleton" style="${m.poster ? `background-image:url('https://image.tmdb.org/t/p/w342${m.poster}')` : ''}"></div>
+        <div class="detail__poster skeleton" style="${m.poster ? `background-image:url('${m.poster}')` : ''}"></div>
         <div class="detail__info" style="padding-top:44px">
           <h2 class="detail__title">${esc(m.title)}</h2>
           <div class="detail__facts"><span class="chip">${m.year || ''}</span></div>

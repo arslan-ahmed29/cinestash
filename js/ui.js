@@ -60,7 +60,7 @@ export function cardHtml(movie, { rank, lazy = true } = {}) {
   const stars = rating ? starsHtml(rating) : '';
 
   return `
-  <div class="card" data-movie-id="${movie.id}" role="button" tabindex="0" aria-label="${esc(movie.title)}">
+  <div class="card" data-movie-id="${movie.id}" data-poster="${esc(p)}" role="button" tabindex="0" aria-label="${esc(movie.title)}">
     <div class="card__poster${p ? '' : ' card__poster--empty skeleton'}"
       style="${p ? `background-image:url('${p}')` : ''}">
       ${rank != null ? `<div class="card__rank">${rank}</div>` : ''}

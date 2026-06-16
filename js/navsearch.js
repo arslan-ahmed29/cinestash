@@ -4,8 +4,6 @@ import { search } from './api.js';
 import { poster } from './api.js';
 import { esc } from './ui.js';
 
-const IMG = 'https://image.tmdb.org/t/p/w92';
-
 export function initNavSearch(onSelect, onEnter) {
   const form    = document.getElementById('navSearch');
   const input   = document.getElementById('navSearchInput');
@@ -39,7 +37,7 @@ export function initNavSearch(onSelect, onEnter) {
     selIdx = -1;
     if (!movies.length) { closePop(); return; }
     p.innerHTML = movies.slice(0, 7).map((m, i) => {
-      const imgUrl = m.poster ? `${IMG}${m.poster}` : '';
+      const imgUrl = m.poster || '';
       return `<div class="search-pop__item" data-idx="${i}" role="option" aria-selected="false">
         <div class="search-pop__poster" style="${imgUrl ? `background-image:url('${imgUrl}')` : 'background-color:#232338'}"></div>
         <div>

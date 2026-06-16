@@ -1,91 +1,123 @@
-/* ░░ api.js — TMDB access layer ░░
-   "Every movie known to mankind" comes from The Movie Database (TMDB).
-   The user supplies their own free API key (stored locally) so no secret
-   ships in the repo. Supports both the classic v3 key and v4 bearer token. */
+/* ░░ api.js — Free IMDb API (no key required) ░░
+   https://imdb.iamidiotareyoutoo.com
+   Search: GET /search?q=<title>
+   Detail: GET /search?tt=tt0468569
+   Response: { ok, description: [{ imdbId, "#TITLE", "#YEAR", "#IMG_POSTER",
+               "#IMDb_SHORT_DESC", "#STORY_LINE", genre }] }
+*/
 
-import { getSettings } from './storage.js';
+const BASE = 'https://imdb.iamidiotareyoutoo.com';
 
-const BASE = 'https://api.themoviedb.org/3';
-export const IMG = 'https://image.tmdb.org/t/p';
+/* always true — no key needed */
+export const hasKey = () => true;
 
-export const poster   = (path, size = 'w500') => path ? `${IMG}/${size}${path}` : '';
-export const backdrop = (path, size = 'w1280') => path ? `${IMG}/${size}${path}` : '';
+/* poster/backdrop: this API returns full URLs already */
+export const poster   = (url) => url || '';
+export const backdrop = (url) => url || '';
 
-export function hasKey() {
-  const k = getSettings().tmdbKey?.trim();
-  return !!k;
-}
-
-function authedUrl(path, params = {}) {
-  const key = getSettings().tmdbKey?.trim() || '';
-  const url = new URL(BASE + path);
-  // v4 tokens are long JWTs; v3 keys are short hex. Default to v3 query param.
-  const isV4 = key.startsWith('eyJ') || key.length > 60;
-  if (!isV4) url.searchParams.set('api_key', key);
-  Object.entries(params).forEach(([k, v]) => v != null && url.searchParams.set(k, v));
-  return { url: url.toString(), headers: isV4 ? { Authorization: `Bearer ${key}` } : {} };
-}
-
-async function call(path, params) {
-  if (!hasKey()) {
-    const err = new Error('NO_KEY');
-    err.code = 'NO_KEY';
-    throw err;
-  }
-  const { url, headers } = authedUrl(path, params);
-  const res = await fetch(url, { headers });
-  if (!res.ok) {
-    const err = new Error(`TMDB ${res.status}`);
-    err.code = res.status === 401 ? 'BAD_KEY' : 'HTTP';
-    throw err;
-  }
-  return res.json();
-}
-
-/* normalise a TMDB movie into the shape the app uses everywhere */
+/* normalize a raw API result into the shape the app uses */
 export function normalize(m) {
   return {
-    id: m.id,
-    title: m.title || m.name || 'Untitled',
-    year: (m.release_date || m.first_air_date || '').slice(0, 4),
-    release_date: m.release_date,
-    poster: m.poster_path || '',
-    backdrop: m.backdrop_path || '',
-    voteAverage: m.vote_average ?? null,
-    overview: m.overview || '',
-    runtime: m.runtime || null,
-    genres: m.genres ? m.genres.map(g => g.name) : [],
-    tagline: m.tagline || '',
-    director: m.director || '',
-    cast: m.cast || [],
+    id:          m.imdbId || '',
+    title:       m['#TITLE']        || m.title    || 'Untitled',
+    year:        String(m['#YEAR']  || m.year     || ''),
+    poster:      m['#IMG_POSTER']   || m.poster   || '',
+    backdrop:    '',   /* not provided by this API */
+    voteAverage: null,
+    overview:    m['#IMDb_SHORT_DESC'] || m['#STORY_LINE'] || m.description || '',
+    runtime:     null,
+    genres:      Array.isArray(m.genre) ? m.genre : [],
+    tagline:     '',
+    director:    '',
+    cast:        [],
+    imdbUrl:     m['#IMDB_URL'] || `https://www.imdb.com/title/${m.imdbId}/`,
   };
+}
+
+async function apiFetch(params) {
+  const url = new URL(`${BASE}/search`);
+  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+  const res = await fetch(url.toString());
+  if (!res.ok) throw new Error(`API ${res.status}`);
+  const json = await res.json();
+  if (!json.ok && !json.description) throw new Error(json.description || 'API error');
+  return json;
 }
 
 export async function search(query) {
   if (!query.trim()) return [];
-  const data = await call('/search/movie', { query, include_adult: false });
-  return (data.results || [])
-    .filter(m => m.poster_path || m.release_date)
-    .map(normalize);
-}
-
-export async function trending() {
-  const data = await call('/trending/movie/week');
-  return (data.results || []).map(normalize);
-}
-
-export async function popular() {
-  const data = await call('/movie/popular');
-  return (data.results || []).map(normalize);
+  const json = await apiFetch({ q: query });
+  const results = json.description;
+  if (!Array.isArray(results)) return [];
+  return results.map(normalize).filter(m => m.id && m.title);
 }
 
 export async function details(id) {
-  const data = await call(`/movie/${id}`, { append_to_response: 'credits' });
-  const m = normalize(data);
-  if (data.credits) {
-    const dir = data.credits.crew?.find(c => c.job === 'Director');
-    m.director = dir ? dir.name : '';
-    m.cast = (data.credits.cast || []).slice(0, 6).map(c => c.name);
-  }
-  return m;
+  /* id is an IMDb tt string like "tt0468569" */
+  const json = await apiFetch({ tt: id });
+  const results = json.description;
+  if (!Array.isArray(results) || !results.length) throw new Error('Not found');
+  /* find the exact match, or fall back to first result */
+  const match = results.find(r => r.imdbId === id) || results[0];
+  return normalize(match);
+}
+
+/* ── Popular / Trending ──────────────────────────────────────────── */
+/* Since the API has no trending endpoint, we fetch a curated list
+   of well-known films in parallel and cache in sessionStorage.     */
+
+const POPULAR_IDS = [
+  'tt0468569', // The Dark Knight
+  'tt1375666', // Inception
+  'tt0816692', // Interstellar
+  'tt0111161', // The Shawshank Redemption
+  'tt0068646', // The Godfather
+  'tt0137523', // Fight Club
+  'tt6751668', // Parasite
+  'tt0109830', // Forrest Gump
+  'tt0050083', // 12 Angry Men
+  'tt0245429', // Spirited Away
+  'tt0993846', // The Wolf of Wall Street
+  'tt1853728', // Django Unchained
+  'tt0482571', // The Prestige
+  'tt2582802', // Whiplash
+  'tt0317248', // City of God
+  'tt1853728', // Django Unchained
+  'tt0372784', // Batman Begins
+  'tt0133093', // The Matrix
+  'tt0120737', // The Fellowship of the Ring
+  'tt4154796', // Avengers: Endgame
+];
+
+const CACHE_KEY = 'cinestash:popular_v1';
+const CACHE_TTL = 60 * 60 * 1000; // 1 hour
+
+export async function popular() {
+  return fetchCuratedList(POPULAR_IDS.slice(0, 12));
+}
+
+export async function trending() {
+  return fetchCuratedList(POPULAR_IDS.slice(0, 10));
+}
+
+async function fetchCuratedList(ids) {
+  /* check cache first */
+  try {
+    const cached = sessionStorage.getItem(CACHE_KEY);
+    if (cached) {
+      const { data, ts, ids: cachedIds } = JSON.parse(cached);
+      if (Date.now() - ts < CACHE_TTL && JSON.stringify(cachedIds) === JSON.stringify(ids)) {
+        return data;
+      }
+    }
+  } catch {}
+
+  /* fetch all in parallel, ignore failures */
+  const settled = await Promise.allSettled(ids.map(id => details(id)));
+  const movies  = settled
+    .filter(r => r.status === 'fulfilled' && r.value?.id)
+    .map(r => r.value);
+
+  try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({ data: movies, ts: Date.now(), ids })); } catch {}
+  return movies;
 }

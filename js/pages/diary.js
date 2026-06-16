@@ -33,7 +33,7 @@ export function renderDiary(app) {
 
     const row = e.target.closest('.diary__row[data-movie-id]');
     if (row) {
-      const id    = parseInt(row.dataset.movieId);
+      const id    = row.dataset.movieId || '';
       const title = row.querySelector('.diary__title-text')?.textContent || '';
       const year  = row.dataset.year || '';
       const p     = row.dataset.poster || '';

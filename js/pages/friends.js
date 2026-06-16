@@ -5,8 +5,6 @@ import { poster } from '../api.js';
 import { starsHtml, esc, toast, openModal, closeModal } from '../ui.js';
 import { openDetail } from '../detail.js';
 
-const IMG_W92 = 'https://image.tmdb.org/t/p/w92';
-
 export function renderFriends(app) {
   const friends   = getDemoFriends().filter(f => !isBlocked(f.id));
   const following = getFollowing();
@@ -50,7 +48,7 @@ export function renderFriends(app) {
   /* open movie on feed item click */
   document.getElementById('friendsFeed')?.addEventListener('click', e => {
     const item = e.target.closest('.friend-item[data-movie-id]');
-    if (item) openDetail({ id: parseInt(item.dataset.movieId), title: item.dataset.title, year: item.dataset.year, poster: item.dataset.poster });
+    if (item) openDetail({ id: item.dataset.movieId, title: item.dataset.title, year: item.dataset.year, poster: item.dataset.poster });
   });
 }
 
@@ -80,7 +78,7 @@ function buildFeed(friends, following) {
   if (!items.length) return emptyFeed();
 
   return items.map(({ friend, log }) => {
-    const imgP = log.movie.poster ? `${IMG_W92}${log.movie.poster}` : '';
+    const imgP = log.movie.poster || '';
     const stars = log.rating ? starsHtml(log.rating) : '';
     const followed = following.includes(friend.id);
     const opacity = followed ? '' : 'opacity:0.45';

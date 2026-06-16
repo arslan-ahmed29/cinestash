@@ -1,37 +1,15 @@
 /* ░░ settings.js — API key + profile settings modal ░░ */
 
-import { getSettings, getProfile, updateSettings, updateProfile, exportData, importData, wipe } from './storage.js';
-import { openModal, closeModal, toast, esc, fileToDataUrl } from './ui.js';
-import { hasKey } from './api.js';
+import { getProfile, updateProfile, exportData, importData, wipe } from './storage.js';
+import { openModal, closeModal, toast, esc } from './ui.js';
 
 export function openSettings() {
-  const s = getSettings();
   const p = getProfile();
-  const keyOk = hasKey();
 
   openModal(`
   <div class="dialog">
     <h2 class="dialog__title">Settings</h2>
     <p class="dialog__sub">Your data lives entirely in your browser — no account needed.</p>
-
-    <h3 style="font-size:14px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:12px">TMDB API Key</h3>
-    <div class="callout">
-      <strong>Why do I need this?</strong> CINESTASH uses The Movie Database (TMDB) to power search and trending. Get a free key at
-      <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener">themoviedb.org/settings/api</a> — takes 2 minutes, completely free.
-    </div>
-    <div class="field">
-      <label class="field__label" for="tmdbKeyInput">API Key (v3 auth)
-        <span style="margin-left:8px">
-          <span class="status-dot ${keyOk ? 'status-dot--ok' : 'status-dot--off'}"></span>
-          ${keyOk ? 'Connected' : 'Not set'}
-        </span>
-      </label>
-      <div style="display:flex;gap:8px">
-        <input class="input" type="password" id="tmdbKeyInput" placeholder="Paste your TMDB API key…" value="${esc(s.tmdbKey || '')}" style="flex:1">
-        <button class="btn" id="toggleKeyVisibility" title="Show/hide key">👁</button>
-      </div>
-    </div>
-    <button class="btn btn--primary" id="saveKeyBtn" style="margin-bottom:28px">Save key</button>
 
     <h3 style="font-size:14px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:12px">Profile</h3>
     <div class="field">
@@ -62,19 +40,6 @@ export function openSettings() {
       <button class="btn" id="settingsCloseBtn">Close</button>
     </div>
   </div>`);
-
-  /* toggle key visibility */
-  const keyInput = document.getElementById('tmdbKeyInput');
-  document.getElementById('toggleKeyVisibility')?.addEventListener('click', () => {
-    keyInput.type = keyInput.type === 'password' ? 'text' : 'password';
-  });
-
-  document.getElementById('saveKeyBtn')?.addEventListener('click', () => {
-    const key = keyInput.value.trim();
-    updateSettings({ tmdbKey: key });
-    toast(key ? 'API key saved ✓' : 'API key cleared', '🔑');
-    window.dispatchEvent(new CustomEvent('cinestash:change'));
-  });
 
   document.getElementById('saveProfileBtn')?.addEventListener('click', () => {
     updateProfile({
