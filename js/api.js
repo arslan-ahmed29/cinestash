@@ -100,10 +100,10 @@ export async function trending() {
   return fetchCuratedList(POPULAR_IDS.slice(0, 10));
 }
 
-async function fetchCuratedList(ids) {
+async function fetchCuratedList(ids, cacheKey = CACHE_KEY) {
   /* check cache first */
   try {
-    const cached = sessionStorage.getItem(CACHE_KEY);
+    const cached = sessionStorage.getItem(cacheKey);
     if (cached) {
       const { data, ts, ids: cachedIds } = JSON.parse(cached);
       if (Date.now() - ts < CACHE_TTL && JSON.stringify(cachedIds) === JSON.stringify(ids)) {
@@ -118,6 +118,33 @@ async function fetchCuratedList(ids) {
     .filter(r => r.status === 'fulfilled' && r.value?.id)
     .map(r => r.value);
 
-  try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({ data: movies, ts: Date.now(), ids })); } catch {}
+  try { sessionStorage.setItem(cacheKey, JSON.stringify({ data: movies, ts: Date.now(), ids })); } catch {}
   return movies;
+}
+
+/* ── In Theaters / Coming Soon ───────────────────────────────────── */
+/* This free API has no showtimes endpoint, so we surface a curated set
+   of recent + upcoming theatrical releases. Each film links out to a
+   Google "showtimes near me" search that uses the user's own location. */
+
+const THEATER_IDS = [
+  'tt30057084', // Wicked: For Good
+  'tt27003788', // Materialists
+  'tt31193180', // Sinners
+  'tt28607951', // Mickey 17
+  'tt11655566', // Thunderbolts*
+  'tt18259086', // Superman (2025)
+  'tt31036941', // 28 Years Later
+  'tt22022452', // F1
+  'tt9603208',  // Mission: Impossible — The Final Reckoning
+  'tt24871974', // A Minecraft Movie
+  'tt19847976', // Captain America: Brave New World
+  'tt23468450', // How to Train Your Dragon (2025)
+];
+
+const THEATER_CACHE_KEY = 'cinestash:theaters_v1';
+
+export async function inTheaters() {
+  const ids = [...new Set(THEATER_IDS)];
+  return fetchCuratedList(ids, THEATER_CACHE_KEY);
 }

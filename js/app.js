@@ -6,6 +6,7 @@ import { renderWatchlist } from './pages/watchlist.js';
 import { renderDiary } from './pages/diary.js';
 import { renderSearch } from './pages/search.js';
 import { renderFriends } from './pages/friends.js';
+import { renderTheaters } from './pages/theaters.js';
 import { openSettings } from './settings.js';
 import { openDetail } from './detail.js';
 import { initNavSearch } from './navsearch.js';
@@ -19,6 +20,7 @@ initTheme();
 const ROUTES = {
   '/':          renderHome,
   '/friends':   renderFriends,
+  '/theaters':  renderTheaters,
   '/watchlist': renderWatchlist,
   '/diary':     renderDiary,
 };
@@ -48,6 +50,7 @@ function setActiveNav(path) {
     const route   = el.dataset.route;
     const matches = (route === 'home'    && (path === '/' || !path)) ||
                     (route === 'friends'  && path === '/friends') ||
+                    (route === 'theaters' && path === '/theaters') ||
                     (route === 'watchlist'&& path === '/watchlist') ||
                     (route === 'diary'    && path === '/diary');
     el.classList.toggle('is-active', matches);

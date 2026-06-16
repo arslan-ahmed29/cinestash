@@ -1,21 +1,30 @@
 /* ░░ pages/diary.js — Full viewing diary ░░ */
 
-import { getLogs, deleteLog, stats } from '../storage.js';
+import { getLogs, getLogFor, deleteLog, stats } from '../storage.js';
 import { poster } from '../api.js';
 import { starsHtml, toast, esc } from '../ui.js';
 import { openDetail } from '../detail.js';
 import { openLogForm } from '../logform.js';
+import { openSearchPicker } from '../searchpicker.js';
 
 export function renderDiary(app) {
   const logs = getLogs();
   const s = stats();
 
   app.innerHTML = `
-  <div class="page-head fade-in">
-    <h1 class="page-head__title">Diary</h1>
-    <p class="page-head__sub">${s.total} log${s.total !== 1 ? 's' : ''} · ${s.films} unique film${s.films !== 1 ? 's' : ''} · ${s.thisYear} this year</p>
+  <div class="page-head page-head--row fade-in">
+    <div>
+      <h1 class="page-head__title">Diary</h1>
+      <p class="page-head__sub">${s.total} log${s.total !== 1 ? 's' : ''} · ${s.films} unique film${s.films !== 1 ? 's' : ''} · ${s.thisYear} this year</p>
+    </div>
+    <button class="add-btn" id="addToDiaryBtn" aria-label="Log a film" title="Log a film">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+    </button>
   </div>
   ${logs.length ? diaryHtml(logs) : emptyState()}`;
+
+  document.getElementById('addToDiaryBtn')?.addEventListener('click', openDiaryPicker);
+  document.getElementById('diaryEmptyAdd')?.addEventListener('click', openDiaryPicker);
 
   app.addEventListener('click', e => {
     const delBtn = e.target.closest('.diary__del');
@@ -31,14 +40,35 @@ export function renderDiary(app) {
       return;
     }
 
-    const row = e.target.closest('.diary__row[data-movie-id]');
-    if (row) {
-      const id    = row.dataset.movieId || '';
-      const title = row.querySelector('.diary__title-text')?.textContent || '';
-      const year  = row.dataset.year || '';
-      const p     = row.dataset.poster || '';
-      openDetail({ id, title, year, poster: p });
+    const editBtn = e.target.closest('.diary__edit');
+    if (editBtn) {
+      e.stopPropagation();
+      const row = editBtn.closest('.diary__row');
+      const movie = movieFromRow(row);
+      const existing = getLogFor(movie.id);
+      openLogForm(movie, existing);
+      return;
     }
+
+    const row = e.target.closest('.diary__row[data-movie-id]');
+    if (row) openDetail(movieFromRow(row));
+  });
+}
+
+function movieFromRow(row) {
+  return {
+    id:     row.dataset.movieId || '',
+    title:  row.querySelector('.diary__title-text')?.textContent || '',
+    year:   row.dataset.year || '',
+    poster: row.dataset.poster || '',
+  };
+}
+
+function openDiaryPicker() {
+  openSearchPicker({
+    title: 'Log a film',
+    hint: 'Search a film you watched…',
+    onPick: (movie) => openLogForm(movie, getLogFor(movie.id)),
   });
 }
 
@@ -74,7 +104,10 @@ function diaryHtml(logs) {
         </div>
         ${log.review ? `<div class="diary__review">${esc(log.review)}</div>` : ''}
       </div>
-      <div class="diary__stars">${stars}</div>
+      <div class="diary__stars">${stars || '<span class="diary__norating">Not rated</span>'}</div>
+      <button class="diary__edit" title="Edit rating & review" aria-label="Edit log for ${esc(log.movie.title)}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      </button>
       <button class="diary__del" data-log-id="${log.id}" title="Delete log" aria-label="Delete log for ${esc(log.movie.title)}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
       </button>
@@ -89,6 +122,7 @@ function emptyState() {
   return `<div class="empty fade-in">
     <div class="empty__icon">📔</div>
     <div class="empty__title">Your diary is empty</div>
-    <div class="empty__text">Every film you log will appear here in order, like a personal film diary.</div>
+    <div class="empty__text">Every film you log — with your ★ rating and review — appears here in order, like a personal film diary.</div>
+    <button class="btn btn--primary" id="diaryEmptyAdd">+ Log your first film</button>
   </div>`;
 }

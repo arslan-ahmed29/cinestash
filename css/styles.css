@@ -852,8 +852,87 @@ input, textarea, select { font: inherit; color: inherit; }
 
 /* ── Page header ─────────────────────────────────── */
 .page-head { margin-top: 28px; }
+.page-head--row { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
 .page-head__title { font-size: 32px; font-weight: 700; letter-spacing: -0.8px; }
 .page-head__sub { color: var(--label-2); font-size: 14px; margin-top: 4px; }
+
+/* ── Add button (round +) ────────────────────────── */
+.add-btn {
+  flex-shrink: 0; width: 44px; height: 44px; border-radius: 50%;
+  background: var(--accent); color: #fff; border: none; cursor: pointer;
+  display: grid; place-items: center;
+  box-shadow: 0 4px 14px rgba(255,45,85,0.4);
+  transition: transform .15s var(--spring), box-shadow .15s;
+}
+.add-btn:hover { transform: scale(1.08); box-shadow: 0 6px 20px rgba(255,45,85,0.5); }
+.add-btn:active { transform: scale(0.95); }
+.add-btn svg { width: 22px; height: 22px; }
+
+/* ── Diary edit / no-rating ──────────────────────── */
+.diary__edit {
+  color: var(--label-3); flex-shrink: 0; padding: 7px; border-radius: var(--r-xs);
+  transition: color .12s, background .12s;
+}
+.diary__edit:hover { color: var(--accent); background: var(--accent-bg); }
+.diary__edit svg { width: 15px; height: 15px; }
+.diary__norating { color: var(--label-3); font-size: 12px; font-style: italic; letter-spacing: 0; }
+
+/* ── In Theaters ─────────────────────────────────── */
+.theaters {
+  margin-top: 22px;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+.theater-card {
+  display: flex; gap: 14px; cursor: pointer;
+  background: var(--surface); border: 0.5px solid var(--sep);
+  border-radius: var(--r); padding: 14px;
+  box-shadow: var(--shadow-xs);
+  transition: background .12s, box-shadow .15s, transform .15s var(--ease);
+}
+.theater-card:hover { background: var(--fill-2); box-shadow: var(--shadow); transform: translateY(-2px); }
+.theater-card__poster {
+  width: 92px; height: 138px; border-radius: 10px; flex-shrink: 0;
+  background-size: cover; background-position: center; background-color: var(--fill);
+  border: 0.5px solid var(--sep);
+  display: grid; place-items: center; overflow: hidden;
+}
+.theater-card__noimg { font-size: 11px; color: var(--label-3); text-align: center; padding: 8px; }
+.theater-card__body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.theater-card__title { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; line-height: 1.2; }
+.theater-card__year { font-size: 13px; color: var(--label-3); margin-top: 2px; }
+.theater-card__overview {
+  font-size: 12.5px; color: var(--label-2); line-height: 1.45; margin-top: 8px;
+  overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+}
+.theater-card__showtimes { margin-top: auto; align-self: flex-start; text-decoration: none; }
+
+/* ── Search picker modal ─────────────────────────── */
+.picker-search { position: relative; margin-bottom: 14px; }
+.picker-search__icon {
+  position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+  width: 17px; height: 17px; color: var(--label-3); pointer-events: none;
+}
+.picker-search__input { padding-left: 38px; }
+.picker-results { max-height: 56vh; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+.picker-hint { padding: 28px 12px; text-align: center; color: var(--label-3); font-size: 14px; }
+.picker-row {
+  display: flex; align-items: center; gap: 12px; cursor: pointer;
+  padding: 8px; border-radius: var(--r-sm);
+  transition: background .12s;
+}
+.picker-row:hover, .picker-row:focus-visible { background: var(--fill-2); outline: none; }
+.picker-row__poster {
+  width: 40px; height: 60px; border-radius: var(--r-xs); flex-shrink: 0;
+  background-size: cover; background-position: center; border: 0.5px solid var(--sep);
+}
+.picker-row__info { flex: 1; min-width: 0; }
+.picker-row__title { font-size: 14px; font-weight: 600; }
+.picker-row__year { font-size: 12.5px; color: var(--label-3); margin-top: 2px; }
+.picker-row__add {
+  flex-shrink: 0; color: var(--accent); font-size: 22px; font-weight: 300;
+  width: 30px; height: 30px; display: grid; place-items: center;
+}
 
 /* ── Loader ──────────────────────────────────────── */
 .loader { display: grid; place-items: center; padding: 72px 0; }
