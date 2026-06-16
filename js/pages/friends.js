@@ -1,6 +1,6 @@
 /* ░░ pages/friends.js — Friends activity feed ░░ */
 
-import { getDemoFriends, getFollowing, follow, unfollow, isFollowing } from '../storage.js';
+import { getDemoFriends, getFollowing, follow, unfollow, isFollowing, isBlocked } from '../storage.js';
 import { poster } from '../api.js';
 import { starsHtml, esc, toast, openModal, closeModal } from '../ui.js';
 import { openDetail } from '../detail.js';
@@ -8,7 +8,7 @@ import { openDetail } from '../detail.js';
 const IMG_W92 = 'https://image.tmdb.org/t/p/w92';
 
 export function renderFriends(app) {
-  const friends  = getDemoFriends();
+  const friends   = getDemoFriends().filter(f => !isBlocked(f.id));
   const following = getFollowing();
 
   app.innerHTML = `

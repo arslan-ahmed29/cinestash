@@ -157,21 +157,18 @@ input, textarea, select { font: inherit; color: inherit; }
 }
 
 /* Brand */
-.brand { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-.brand__icon {
-  width: 30px; height: 30px;
-  background: var(--accent);
-  border-radius: 8px;
-  display: grid; place-items: center;
-  font-size: 15px;
-  box-shadow: 0 2px 8px rgba(255,45,85,0.35);
-  flex-shrink: 0;
-  transition: background .25s;
+.brand { display: flex; align-items: center; gap: 9px; flex-shrink: 0; }
+.brand__logo {
+  width: 34px; height: 34px; flex-shrink: 0;
+  box-shadow: 0 3px 10px rgba(255,45,85,0.35);
+  border-radius: 9px;
+  transition: transform .2s var(--spring);
 }
-[data-theme="dark"] .brand__icon { background: var(--accent); }
+.brand:hover .brand__logo { transform: rotate(8deg) scale(1.08); }
 .brand__name {
-  font-size: 17px; font-weight: 700;
-  letter-spacing: -0.4px; color: var(--label);
+  font-family: 'Bebas Neue', 'SF Pro Display', system-ui, sans-serif;
+  font-size: 26px; letter-spacing: 3px; line-height: 1;
+  color: var(--label); font-weight: 400;
 }
 .brand__name em {
   font-style: normal; color: var(--accent);
@@ -866,6 +863,18 @@ input, textarea, select { font: inherit; color: inherit; }
   border-top-color: var(--accent);
   border-radius: 50%; animation: spin .72s linear infinite;
 }
+
+/* ── Privacy badge ───────────────────────────────── */
+.privacy-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: 700; padding: 3px 9px;
+  border-radius: 999px; border: 1px solid; cursor: pointer;
+  transition: opacity .15s, transform .12s;
+  letter-spacing: 0.2px;
+}
+.privacy-badge:hover { opacity: 0.75; transform: scale(0.97); }
+.privacy-badge--public  { color: var(--good);    border-color: var(--good);    background: var(--good-bg); }
+.privacy-badge--private { color: var(--label-2); border-color: var(--sep);     background: var(--fill); }
 
 /* ── No-key banner ───────────────────────────────── */
 .no-key-banner {

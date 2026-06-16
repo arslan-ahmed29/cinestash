@@ -9,6 +9,9 @@
   <title>CINESTASH</title>
   <link rel="preconnect" href="https://image.tmdb.org" />
   <link rel="preconnect" href="https://api.themoviedb.org" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="./css/styles.css" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>" />
 </head>
@@ -17,7 +20,24 @@
   <header class="nav" id="nav">
     <div class="nav__inner">
       <a class="brand" href="#/" data-link aria-label="CINESTASH home">
-        <span class="brand__icon">🎬</span>
+        <!-- film reel SVG logo -->
+        <svg class="brand__logo" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect width="36" height="36" rx="9" fill="#FF2D55"/>
+          <!-- outer ring -->
+          <circle cx="18" cy="18" r="11" stroke="white" stroke-width="1.8" fill="none"/>
+          <!-- center hub -->
+          <circle cx="18" cy="18" r="3.2" fill="white"/>
+          <!-- spokes -->
+          <line x1="18" y1="7" x2="18" y2="11" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="18" y1="25" x2="18" y2="29" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="7" y1="18" x2="11" y2="18" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="25" y1="18" x2="29" y2="18" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+          <!-- sprocket holes at 45° -->
+          <circle cx="10.45" cy="10.45" r="1.5" fill="white"/>
+          <circle cx="25.55" cy="10.45" r="1.5" fill="white"/>
+          <circle cx="10.45" cy="25.55" r="1.5" fill="white"/>
+          <circle cx="25.55" cy="25.55" r="1.5" fill="white"/>
+        </svg>
         <span class="brand__name">CINE<em>STASH</em></span>
       </a>
 

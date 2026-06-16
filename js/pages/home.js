@@ -1,7 +1,10 @@
 /* ░░ pages/home.js — Profile page ░░ */
 
 import { getProfile, getFavorites, getRecentLogs, stats, updateProfile,
-         toggleWatchlist, getFollowing, getFollowers, getDemoFriends, follow, unfollow, isFollowing } from '../storage.js';
+         toggleWatchlist, getFollowing, getFollowers, getDemoFriends,
+         follow, unfollow, isFollowing,
+         removeFollower, blockUser, unblockUser, getBlocked, isBlocked,
+         isPrivate, setPrivacy } from '../storage.js';
 import { trending, hasKey } from '../api.js';
 import { cardHtml, carouselHtml, attachCarouselNav, toast, esc, fileToDataUrl, loaderHtml } from '../ui.js';
 import { openModal, closeModal } from '../ui.js';
@@ -189,7 +192,14 @@ function profileHeaderHtml(profile, s, following, followers) {
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:15px;height:15px"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           </button>
         </div>
-        <div class="profile__handle">@${esc(profile.handle)}</div>
+        <div class="profile__handle" style="display:flex;align-items:center;gap:8px">
+          @${esc(profile.handle)}
+          <button class="privacy-badge ${isPrivate() ? 'privacy-badge--private' : 'privacy-badge--public'}" id="privacyToggleBtn" title="${isPrivate() ? 'Private profile — tap to make public' : 'Public profile — tap to make private'}">
+            ${isPrivate()
+              ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:11px;height:11px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg> Private`
+              : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:11px;height:11px"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Public`}
+          </button>
+        </div>
         <div class="profile__bio" id="profileBio">${esc(profile.bio)}</div>
 
         <!-- social stats -->
@@ -215,43 +225,160 @@ function profileHeaderHtml(profile, s, following, followers) {
 
 /* ── Social modals ────────────────────────────── */
 function bindSocialButtons() {
-  document.getElementById('followersBtn')?.addEventListener('click', () => openUserList('Followers', getFollowers()));
-  document.getElementById('followingBtn')?.addEventListener('click', () => openUserList('Following', getFollowing(), true));
+  document.getElementById('followersBtn')?.addEventListener('click', () => openFollowersList());
+  document.getElementById('followingBtn')?.addEventListener('click', () => openFollowingList());
+  document.getElementById('privacyToggleBtn')?.addEventListener('click', () => {
+    const next = !isPrivate();
+    setPrivacy(next);
+    toast(next ? 'Profile set to Private 🔒' : 'Profile set to Public 🌐', next ? '🔒' : '🌐');
+    window.dispatchEvent(new CustomEvent('cinestash:change'));
+  });
 }
 
-function openUserList(title, userIds, canUnfollow = false) {
+function openFollowersList() {
   const friends = getDemoFriends();
-  const rows = userIds.map(id => {
-    const f = friends.find(fr => fr.id === id);
-    if (!f) return '';
-    const followed = isFollowing(f.id);
-    return `
-    <div class="ios-list__item">
-      <div class="ios-list__avatar">${f.emoji}</div>
-      <div class="ios-list__info">
-        <div class="ios-list__name">${esc(f.displayName)}</div>
-        <div class="ios-list__sub">@${esc(f.username)}</div>
-      </div>
-      ${canUnfollow ? `<button class="ios-list__action is-following" data-toggle-follow="${f.id}">${followed ? 'Following' : 'Follow'}</button>` : ''}
-    </div>`;
-  }).join('');
+  const followerIds = getFollowers();
+  const blockedIds  = getBlocked();
+
+  function buildRows() {
+    return followerIds.map(id => {
+      const f = friends.find(fr => fr.id === id);
+      if (!f) return '';
+      return `
+      <div class="ios-list__item" data-user-id="${f.id}">
+        <div class="ios-list__avatar">${f.emoji}</div>
+        <div class="ios-list__info">
+          <div class="ios-list__name">${esc(f.displayName)}</div>
+          <div class="ios-list__sub">@${esc(f.username)}</div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="ios-list__action" data-remove="${f.id}" title="Remove follower">Remove</button>
+          <button class="ios-list__action" style="color:var(--sys-red);border-color:var(--sys-red)" data-block="${f.id}" title="Block user">Block</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
 
   openModal(`
   <div class="dialog">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
-      <h2 class="dialog__title" style="margin:0">${esc(title)}</h2>
-      <button class="btn btn--ghost btn--sm" id="socialModalClose">Done</button>
+      <h2 class="dialog__title" style="margin:0">Followers</h2>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn--ghost btn--sm" id="openBlockedListBtn" style="color:var(--sys-red)">Blocked</button>
+        <button class="btn btn--ghost btn--sm" id="socialModalClose">Done</button>
+      </div>
     </div>
-    <div class="ios-list">${rows || '<div style="padding:20px;text-align:center;color:var(--label-2);font-size:14px">Nobody here yet</div>'}</div>
+    <div class="ios-list" id="followerListInner">
+      ${buildRows() || '<div style="padding:20px;text-align:center;color:var(--label-2);font-size:14px">No followers yet</div>'}
+    </div>
   </div>`);
 
   document.getElementById('socialModalClose')?.addEventListener('click', closeModal);
-  document.querySelector('.dialog')?.addEventListener('click', e => {
-    const btn = e.target.closest('[data-toggle-follow]');
+  document.getElementById('openBlockedListBtn')?.addEventListener('click', openBlockedList);
+
+  document.getElementById('followerListInner')?.addEventListener('click', e => {
+    const removeBtn = e.target.closest('[data-remove]');
+    if (removeBtn) {
+      const id = removeBtn.dataset.remove;
+      removeFollower(id);
+      removeBtn.closest('.ios-list__item')?.remove();
+      toast('Follower removed', '✓');
+      window.dispatchEvent(new CustomEvent('cinestash:change'));
+      return;
+    }
+    const blockBtn = e.target.closest('[data-block]');
+    if (blockBtn) {
+      const id = blockBtn.dataset.block;
+      const f  = friends.find(fr => fr.id === id);
+      if (!confirm(`Block @${f?.username || id}? They won't be able to see your profile.`)) return;
+      blockUser(id);
+      blockBtn.closest('.ios-list__item')?.remove();
+      toast(`@${f?.username || id} blocked`, '🚫');
+      window.dispatchEvent(new CustomEvent('cinestash:change'));
+    }
+  });
+}
+
+function openFollowingList() {
+  const friends = getDemoFriends();
+  const followingIds = getFollowing();
+
+  openModal(`
+  <div class="dialog">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+      <h2 class="dialog__title" style="margin:0">Following</h2>
+      <button class="btn btn--ghost btn--sm" id="socialModalClose">Done</button>
+    </div>
+    <div class="ios-list" id="followingListInner">
+      ${followingIds.map(id => {
+        const f = friends.find(fr => fr.id === id);
+        if (!f) return '';
+        return `
+        <div class="ios-list__item" data-user-id="${f.id}">
+          <div class="ios-list__avatar">${f.emoji}</div>
+          <div class="ios-list__info">
+            <div class="ios-list__name">${esc(f.displayName)}</div>
+            <div class="ios-list__sub">@${esc(f.username)}</div>
+          </div>
+          <button class="ios-list__action is-following" data-unfollow="${f.id}">Following</button>
+        </div>`;
+      }).join('') || '<div style="padding:20px;text-align:center;color:var(--label-2);font-size:14px">Not following anyone yet</div>'}
+    </div>
+  </div>`);
+
+  document.getElementById('socialModalClose')?.addEventListener('click', closeModal);
+  document.getElementById('followingListInner')?.addEventListener('click', e => {
+    const btn = e.target.closest('[data-unfollow]');
     if (!btn) return;
-    const id = btn.dataset.toggleFollow;
-    if (isFollowing(id)) { unfollow(id); btn.textContent = 'Follow'; btn.classList.remove('is-following'); }
-    else { follow(id); btn.textContent = 'Following'; btn.classList.add('is-following'); }
+    const id = btn.dataset.unfollow;
+    const f  = friends.find(fr => fr.id === id);
+    if (!confirm(`Unfollow @${f?.username || id}?`)) return;
+    unfollow(id);
+    btn.closest('.ios-list__item')?.remove();
+    toast(`Unfollowed @${f?.username || id}`, '✓');
+    window.dispatchEvent(new CustomEvent('cinestash:change'));
+  });
+}
+
+function openBlockedList() {
+  closeModal();
+  const friends    = getDemoFriends();
+  const blockedIds = getBlocked();
+
+  openModal(`
+  <div class="dialog">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+      <h2 class="dialog__title" style="margin:0">Blocked Users</h2>
+      <button class="btn btn--ghost btn--sm" id="socialModalClose">Done</button>
+    </div>
+    <p style="font-size:13px;color:var(--label-2);margin-bottom:16px;line-height:1.5">Blocked users can't follow you or see your profile.</p>
+    <div class="ios-list" id="blockedListInner">
+      ${blockedIds.length ? blockedIds.map(id => {
+        const f = friends.find(fr => fr.id === id);
+        const name = f ? f.displayName : id;
+        const handle = f ? f.username : id;
+        const emoji  = f ? f.emoji : '👤';
+        return `
+        <div class="ios-list__item" data-user-id="${id}">
+          <div class="ios-list__avatar">${emoji}</div>
+          <div class="ios-list__info">
+            <div class="ios-list__name">${esc(name)}</div>
+            <div class="ios-list__sub">@${esc(handle)}</div>
+          </div>
+          <button class="ios-list__action" style="color:var(--sys-blue);border-color:var(--sys-blue)" data-unblock="${id}">Unblock</button>
+        </div>`;
+      }).join('') : '<div style="padding:20px;text-align:center;color:var(--label-2);font-size:14px">No blocked users 🎉</div>'}
+    </div>
+  </div>`);
+
+  document.getElementById('socialModalClose')?.addEventListener('click', closeModal);
+  document.getElementById('blockedListInner')?.addEventListener('click', e => {
+    const btn = e.target.closest('[data-unblock]');
+    if (!btn) return;
+    const id = btn.dataset.unblock;
+    unblockUser(id);
+    btn.closest('.ios-list__item')?.remove();
+    toast('User unblocked', '✓');
     window.dispatchEvent(new CustomEvent('cinestash:change'));
   });
 }

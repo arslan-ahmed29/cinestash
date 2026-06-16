@@ -79,7 +79,7 @@ const DEFAULTS = () => ({
     avatar: '',
     background: '',
   },
-  settings: { tmdbKey: '' },
+  settings: { tmdbKey: '', isPrivate: false },
   logs: [],
   watchlist: [],
   favorites: [],
@@ -87,6 +87,7 @@ const DEFAULTS = () => ({
   hotTakes: {},
   following: ['friend_01', 'friend_02'],
   followers: ['friend_03', 'friend_04'],
+  blocked: [],
   demoFriendsSeeded: true,
 });
 
@@ -105,6 +106,7 @@ function load() {
       hotTakes: parsed.hotTakes || {},
       following: parsed.following ?? ['friend_01','friend_02'],
       followers: parsed.followers ?? ['friend_03','friend_04'],
+      blocked:   parsed.blocked   ?? [],
     };
   } catch { return DEFAULTS(); }
 }
@@ -228,6 +230,35 @@ export function follow(userId) {
 }
 export function unfollow(userId) {
   state.following = state.following.filter(id => id !== userId);
+  persist();
+}
+
+/* remove a follower (they stay on platform, just no longer follow you) */
+export function removeFollower(userId) {
+  state.followers = state.followers.filter(id => id !== userId);
+  persist();
+}
+
+/* block: remove from followers + following, add to blocked list */
+export function blockUser(userId) {
+  state.followers = state.followers.filter(id => id !== userId);
+  state.following = state.following.filter(id => id !== userId);
+  if (!state.blocked.includes(userId)) state.blocked.push(userId);
+  persist();
+}
+
+export function unblockUser(userId) {
+  state.blocked = state.blocked.filter(id => id !== userId);
+  persist();
+}
+
+export const getBlocked   = () => state.blocked || [];
+export const isBlocked    = (id) => (state.blocked || []).includes(id);
+
+/* privacy */
+export const isPrivate    = () => !!(state.settings?.isPrivate);
+export function setPrivacy(priv) {
+  state.settings = { ...state.settings, isPrivate: !!priv };
   persist();
 }
 
