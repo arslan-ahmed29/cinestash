@@ -223,6 +223,15 @@ input, textarea, select { font: inherit; color: inherit; }
 .nav__link.is-active { color: var(--accent); background: var(--accent-bg); }
 .nav__icon-btn { padding: 8px; }
 .nav__icon-btn span { display: none; }
+.nav__routes { display: flex; align-items: center; gap: 2px; }
+.tabbar { display: none; }
+
+/* ── Theaters: ZIP + radius bar ───────────────────── */
+.zip-bar { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; margin-top: 16px; }
+.zip-bar .field__label { margin-bottom: 5px; }
+.zip-bar__zip { width: 120px; }
+.zip-bar__radius { min-width: 122px; cursor: pointer; }
+.zip-bar__map { text-decoration: none; }
 
 /* ── App layout ──────────────────────────────────── */
 .app { max-width: 1360px; margin: 0 auto; padding: 0 20px 100px; }
@@ -1023,3 +1032,52 @@ input, textarea, select { font: inherit; color: inherit; }
 .tomato-splat::before, .tomato-splat::after { content: ''; position: absolute; background: #cf2b22; }
 .tomato-splat::before { width: 22px; height: 20px; top: -7px; left: 10px; border-radius: 50% 50% 48% 52%; }
 .tomato-splat::after  { width: 15px; height: 14px; bottom: 4px; right: 8px; border-radius: 50%; }
+
+/* ── Mobile: bottom tab bar + touch polish (≤600px) ─ */
+@media (max-width: 600px) {
+  /* move primary nav to a fixed bottom tab bar */
+  .nav__routes { display: none; }
+  .tabbar {
+    display: flex; justify-content: space-around; align-items: stretch;
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
+    gap: 2px; padding: 7px 6px calc(7px + env(safe-area-inset-bottom));
+    background: rgba(242,242,247,0.94);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-top: 0.5px solid var(--sep);
+  }
+  .tabbar .nav__link {
+    flex: 1; flex-direction: column; gap: 3px;
+    padding: 5px 2px; border-radius: var(--r-sm);
+    color: var(--label-2); font-size: 10px; font-weight: 600;
+  }
+  .tabbar .nav__link span { display: inline; font-size: 10px; letter-spacing: 0.1px; }
+  .tabbar .nav__link svg { width: 23px; height: 23px; }
+  .tabbar .nav__link.is-active { color: var(--accent); background: transparent; }
+
+  /* keep content + toasts clear of the bar (+ iOS safe area) */
+  .app   { padding-bottom: calc(82px + env(safe-area-inset-bottom)); }
+  .toast { bottom: calc(84px + env(safe-area-inset-bottom)); }
+
+  /* bigger touch targets + readable reviews for showing friends */
+  .review-react { gap: 10px; margin-top: 10px; }
+  .review-react__btn { font-size: 13px; padding: 9px 15px; min-height: 40px; }
+  .friend-item__review {
+    white-space: normal; overflow: visible;
+    display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical;
+  }
+  .friend-item__poster { width: 52px; }
+
+  /* theaters: let the ZIP field grow, map button go full width */
+  .zip-bar__zip { flex: 1; min-width: 110px; }
+  .zip-bar__radius { flex: 1; }
+  .zip-bar__map { width: 100%; justify-content: center; }
+  .theaters { grid-template-columns: 1fr; }
+
+  /* tighten page chrome on small screens */
+  .page-head { margin-top: 18px; }
+  .page-head__title { font-size: 26px; }
+  .section { margin-top: 28px; }
+  .section__title { font-size: 18px; }
+}
+[data-theme="dark"] .tabbar { background: rgba(28,28,30,0.94); }

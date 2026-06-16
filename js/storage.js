@@ -90,7 +90,7 @@ const DEFAULTS = () => ({
     avatar: '',
     background: '',
   },
-  settings: { tmdbKey: '', isPrivate: false },
+  settings: { tmdbKey: '', isPrivate: false, zip: '', radius: 25 },
   logs: [],
   watchlist: [],
   favorites: [],

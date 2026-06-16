@@ -50,6 +50,7 @@
       </form>
 
       <nav class="nav__links" role="navigation" aria-label="Main">
+        <div class="nav__routes">
         <a href="#/" data-link class="nav__link" data-route="home" title="Profile">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
             <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
@@ -81,6 +82,7 @@
           </svg>
           <span>Diary</span>
         </a>
+        </div>
 
         <!-- theme toggle -->
         <button class="nav__link nav__icon-btn" id="themeBtn" aria-label="Toggle theme">
@@ -100,6 +102,30 @@
       </nav>
     </div>
   </header>
+
+  <!-- ░░ Mobile bottom tab bar (shown ≤600px) ░░ -->
+  <nav class="tabbar" role="navigation" aria-label="Primary">
+    <a href="#/" data-link class="nav__link" data-route="home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span>Profile</span>
+    </a>
+    <a href="#/friends" data-link class="nav__link" data-route="friends">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      <span>Friends</span>
+    </a>
+    <a href="#/theaters" data-link class="nav__link" data-route="theaters">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><rect x="2" y="7" width="15" height="13" rx="2"/><path d="M17 10l5-3v10l-5-3z"/></svg>
+      <span>Theaters</span>
+    </a>
+    <a href="#/watchlist" data-link class="nav__link" data-route="watchlist">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+      <span>Watchlist</span>
+    </a>
+    <a href="#/diary" data-link class="nav__link" data-route="diary">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+      <span>Diary</span>
+    </a>
+  </nav>
 
   <!-- ░░ Main ░░ -->
   <main id="app" class="app"></main>
