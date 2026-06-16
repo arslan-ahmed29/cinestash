@@ -31,12 +31,20 @@ export function initNavSearch(onSelect, onEnter) {
     selIdx = -1;
   }
 
-  function renderResults(movies, query) {
+  function showPop(html) {
     const p = getPopup();
+    p.innerHTML = html;
+    p.classList.add('is-open');
+  }
+
+  function renderResults(movies, query) {
     results = movies;
     selIdx = -1;
-    if (!movies.length) { closePop(); return; }
-    p.innerHTML = movies.slice(0, 7).map((m, i) => {
+    if (!movies.length) {
+      showPop(`<div class="search-pop__foot" style="padding:14px;text-align:center">No results for "${esc(query)}"</div>`);
+      return;
+    }
+    const rows = movies.slice(0, 7).map((m, i) => {
       const imgUrl = m.poster || '';
       return `<div class="search-pop__item" data-idx="${i}" role="option" aria-selected="false">
         <div class="search-pop__poster" style="${imgUrl ? `background-image:url('${imgUrl}')` : 'background-color:#232338'}"></div>
@@ -46,7 +54,7 @@ export function initNavSearch(onSelect, onEnter) {
         </div>
       </div>`;
     }).join('') + `<div class="search-pop__foot">↵ Enter to see all results for "${esc(query)}"</div>`;
-    p.classList.add('is-open');
+    showPop(rows);
   }
 
   input.addEventListener('input', () => {
@@ -55,12 +63,18 @@ export function initNavSearch(onSelect, onEnter) {
     lastQuery = q;
     clearTimeout(debounce);
     if (!q) { closePop(); return; }
+    /* show spinner immediately so the user knows something's happening */
+    showPop(`<div class="search-pop__foot" style="padding:14px;display:flex;align-items:center;gap:10px">
+      <div class="loader__ring" style="width:16px;height:16px;border-width:2px"></div>
+      Searching…
+    </div>`);
     debounce = setTimeout(async () => {
       try {
         const movies = await search(q);
         if (input.value.trim() === q) renderResults(movies, q);
       } catch {
-        closePop();
+        if (input.value.trim() === q)
+          showPop(`<div class="search-pop__foot" style="padding:14px;text-align:center;color:var(--sys-red)">Search failed — check your connection</div>`);
       }
     }, 280);
   });

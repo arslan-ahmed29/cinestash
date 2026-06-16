@@ -1,12 +1,14 @@
 /* ░░ api.js — Free IMDb API (no key required) ░░
-   https://imdb.iamidiotareyoutoo.com
-   Search: GET /search?q=<title>
-   Detail: GET /search?tt=tt0468569
-   Response: { ok, description: [{ imdbId, "#TITLE", "#YEAR", "#IMG_POSTER",
-               "#IMDb_SHORT_DESC", "#STORY_LINE", genre }] }
+   Primary:  https://search.imdbot.workers.dev  (Cloudflare Worker — has CORS)
+   Fallback: https://imdb.iamidiotareyoutoo.com via corsproxy.io
+   Search: GET /?q=<title>      Detail: GET /?tt=tt0468569
+   Response: { ok, description: [{ "#IMDB_ID", "#TITLE", "#YEAR", "#IMG_POSTER",
+               "#ImDb_SHORT_DESC", "#STORY_LINE", "#GENRE" }] }
 */
 
-const BASE = 'https://imdb.iamidiotareyoutoo.com';
+const PRIMARY = 'https://search.imdbot.workers.dev';
+const FALLBACK_BASE = 'https://imdb.iamidiotareyoutoo.com';
+const PROXY = 'https://corsproxy.io/?url=';
 
 /* always true — no key needed */
 export const hasKey = () => true;
@@ -17,30 +19,46 @@ export const backdrop = (url) => url || '';
 
 /* normalize a raw API result into the shape the app uses */
 export function normalize(m) {
+  const id = m['#IMDB_ID'] || m.imdbId || '';
   return {
-    id:          m.imdbId || '',
-    title:       m['#TITLE']        || m.title    || 'Untitled',
-    year:        String(m['#YEAR']  || m.year     || ''),
-    poster:      m['#IMG_POSTER']   || m.poster   || '',
-    backdrop:    '',   /* not provided by this API */
+    id,
+    title:       m['#TITLE']           || m.title       || 'Untitled',
+    year:        String(m['#YEAR']     || m.year        || ''),
+    poster:      m['#IMG_POSTER']      || m.poster      || '',
+    backdrop:    '',
     voteAverage: null,
-    overview:    m['#IMDb_SHORT_DESC'] || m['#STORY_LINE'] || m.description || '',
+    overview:    m['#ImDb_SHORT_DESC'] || m['#STORY_LINE'] || m['#IMDb_SHORT_DESC'] || m.description || '',
     runtime:     null,
-    genres:      Array.isArray(m.genre) ? m.genre : [],
+    genres:      Array.isArray(m['#GENRE']) ? m['#GENRE'] : Array.isArray(m.genre) ? m.genre : [],
     tagline:     '',
     director:    '',
     cast:        [],
-    imdbUrl:     m['#IMDB_URL'] || `https://www.imdb.com/title/${m.imdbId}/`,
+    imdbUrl:     m['#IMDB_URL'] || (id ? `https://www.imdb.com/title/${id}/` : ''),
   };
 }
 
+async function tryFetch(url) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
 async function apiFetch(params) {
-  const url = new URL(`${BASE}/search`);
-  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
-  const res = await fetch(url.toString());
-  if (!res.ok) throw new Error(`API ${res.status}`);
-  const json = await res.json();
-  if (!json.ok && !json.description) throw new Error(json.description || 'API error');
+  /* Build the primary URL (Cloudflare Worker — CORS enabled) */
+  const primary = new URL(PRIMARY);
+  Object.entries(params).forEach(([k, v]) => primary.searchParams.set(k, v));
+
+  /* Try primary → fallback via CORS proxy */
+  let json;
+  try {
+    json = await tryFetch(primary.toString());
+  } catch {
+    const fallback = new URL(`${FALLBACK_BASE}/search`);
+    Object.entries(params).forEach(([k, v]) => fallback.searchParams.set(k, v));
+    json = await tryFetch(`${PROXY}${encodeURIComponent(fallback.toString())}`);
+  }
+
+  if (!json.ok && !json.description) throw new Error('API error');
   return json;
 }
 
