@@ -1,7 +1,7 @@
 /* ░░ pages/home.js — Profile page ░░ */
 
-import { getProfile, getFavorites, getRecentLogs, getLogs, stats, updateProfile } from '../storage.js';
-import { trending, popular, hasKey } from '../api.js';
+import { getProfile, getFavorites, getRecentLogs, stats, updateProfile, toggleWatchlist } from '../storage.js';
+import { trending, hasKey } from '../api.js';
 import { cardHtml, carouselHtml, attachCarouselNav, toast, esc, fileToDataUrl, loaderHtml } from '../ui.js';
 import { openDetail } from '../detail.js';
 import { openLogForm } from '../logform.js';
@@ -213,7 +213,6 @@ export function bindCardEvents(root) {
       const movieYear  = card.querySelector('.card__sub')?.textContent?.split(' ◆')[0] || '';
       const imgStyle   = card.querySelector('.card__poster')?.style.backgroundImage || '';
       const posterPath = imgStyle.match(/url\('.*?(\/.+?)'\)/)?.[1] || '';
-      const { toggleWatchlist, isWatchlisted } = await import('../storage.js');
       const added = toggleWatchlist({ id: movieId, title: movieTitle, year: movieYear, poster: posterPath });
       toast(added ? 'Added to watchlist 🔖' : 'Removed from watchlist', added ? '🔖' : '✓');
       window.dispatchEvent(new CustomEvent('cinestash:change'));
