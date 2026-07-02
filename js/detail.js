@@ -5,6 +5,7 @@ import { getLogFor, getAllLogsFor, toggleWatchlist, toggleFavorite,
          isWatchlisted, isFavorite, getHotTakes, addHotTake, voteHotTake } from './storage.js';
 import { openModal, closeModal, toast, starsHtml, esc } from './ui.js';
 import { openLogForm } from './logform.js';
+import { hamzahTrackerHtml, bindHamzahTrackers } from './hamzahtracker.js';
 
 export async function openDetail(movie) {
   openModal(skeletonHtml(movie));
@@ -31,6 +32,7 @@ function renderDetail(m) {
       ${logged.rating ? `<div class="detail__logged-stars">${starsHtml(logged.rating)}</div>` : ''}
       ${logged.review ? `<div class="detail__logged-review">"${esc(logged.review)}"</div>` : ''}
       <div class="detail__logged-date">Watched ${fmtDate(logged.watchedDate)}</div>
+      ${hamzahTrackerHtml(logged.id, logged.hamzahLate || 0)}
     </div>` : '';
 
   const genreChips = (m.genres || []).map(g => `<span class="chip chip--genre">${esc(g)}</span>`).join('');
@@ -80,6 +82,7 @@ function renderDetail(m) {
   bindClose();
   bindDetailActions(m, logged);
   bindHotTakes(m.id);
+  bindHamzahTrackers(document.getElementById('modalPanel'));
 }
 
 /* ── Hot Takes ──────────────────────────────────── */

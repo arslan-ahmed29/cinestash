@@ -144,6 +144,7 @@ export function logMovie(movie, { rating, review, watchedDate, rewatch=false, ed
   const entry = {
     id: `log_${Date.now()}_${Math.random().toString(36).slice(2,7)}`,
     movie: slimMovie(movie), rating, review, watchedDate, rewatch, loggedAt: Date.now(),
+    hamzahLate: 0,
   };
   state.logs.push(entry);
   state.watchlist = state.watchlist.filter(m => m.id !== movie.id);
@@ -151,6 +152,18 @@ export function logMovie(movie, { rating, review, watchedDate, rewatch=false, ed
 }
 
 export function deleteLog(logId) { state.logs = state.logs.filter(l => l.id !== logId); persist(); }
+
+/* ── Hamzah-o-meter (how late was Hamzah, 0-100) ── */
+export function getHamzahLate(logId) {
+  const log = state.logs.find(l => l.id === logId);
+  return log?.hamzahLate ?? 0;
+}
+export function setHamzahLate(logId, value) {
+  const log = state.logs.find(l => l.id === logId);
+  if (!log) return;
+  log.hamzahLate = Math.max(0, Math.min(100, Math.round(value)));
+  persist();
+}
 
 /* ── Watchlist ────────────────────────────────── */
 export const getWatchlist   = () => [...state.watchlist].sort((a,b) => b.addedAt - a.addedAt);

@@ -620,6 +620,41 @@ input, textarea, select { font: inherit; color: inherit; }
 .detail__logged-review { color: var(--label-2); font-size: 14px; margin-top: 6px; line-height: 1.55; white-space: pre-wrap; }
 .detail__logged-date { color: var(--label-3); font-size: 12px; margin-top: 6px; }
 
+/* ── Hamzah-o-meter ──────────────────────────────── */
+.hamzah-tracker { margin-top: 14px; padding-top: 12px; border-top: 0.5px dashed rgba(52,199,89,0.3); }
+.hamzah-tracker__head {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  margin-bottom: 10px;
+}
+.hamzah-tracker__title { font-size: 12.5px; font-weight: 700; color: var(--label-2); white-space: nowrap; }
+.hamzah-tracker__value { font-size: 12px; font-weight: 600; color: var(--accent); text-align: right; }
+.hamzah-tracker__track {
+  position: relative; height: 28px; padding: 0 2px;
+  display: flex; align-items: center; cursor: pointer;
+}
+.hamzah-tracker__road {
+  position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%);
+  height: 6px; border-radius: 999px;
+  background: linear-gradient(90deg, var(--good) 0%, var(--gold) 50%, var(--sys-red) 100%);
+  opacity: 0.5;
+}
+.hamzah-tracker__car {
+  position: absolute; top: 50%; transform: translate(-50%, -50%);
+  font-size: 22px; line-height: 1; cursor: grab; user-select: none; touch-action: none;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25));
+  transition: filter .12s, scale .12s;
+}
+.hamzah-tracker__car:hover { scale: 1.1; }
+.hamzah-tracker__car:active, .hamzah-tracker__car.is-dragging {
+  cursor: grabbing; scale: 1.18;
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,0.35)) brightness(1.05);
+}
+.hamzah-tracker__car:focus-visible { outline: 2px solid var(--accent); outline-offset: 5px; border-radius: 50%; }
+.hamzah-tracker__ticks {
+  display: flex; justify-content: space-between; margin-top: 2px;
+  font-size: 10px; color: var(--label-3); letter-spacing: 0.1px;
+}
+
 /* ── Hot Takes ───────────────────────────────────── */
 .hot-takes {
   padding: 20px 24px 24px;
