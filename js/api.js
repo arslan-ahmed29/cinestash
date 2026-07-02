@@ -114,8 +114,20 @@ export async function popular() {
   return fetchCuratedList(POPULAR_IDS.slice(0, 12));
 }
 
+/* weeks since the epoch — used to rotate "this week" deterministically */
+function weekIndex() {
+  return Math.floor(Date.now() / (7 * 24 * 60 * 60 * 1000));
+}
+
+/* "Trending This Week" — auto-populated and self-refreshing.
+   We blend current theatrical releases with popular catalog titles, then
+   rotate the 12-title window by the current week so it changes on its own. */
 export async function trending() {
-  return fetchCuratedList(POPULAR_IDS.slice(0, 10));
+  const pool = [...new Set([...THEATER_IDS, ...POPULAR_IDS])];
+  const offset  = (weekIndex() * 5) % pool.length;
+  const rotated = pool.slice(offset).concat(pool.slice(0, offset));
+  const ids = rotated.slice(0, 12);
+  return fetchCuratedList(ids, `cinestash:trending_w${weekIndex()}`);
 }
 
 async function fetchCuratedList(ids, cacheKey = CACHE_KEY) {

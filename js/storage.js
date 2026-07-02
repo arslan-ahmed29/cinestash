@@ -3,36 +3,47 @@
 const KEY = 'cinestash:v1';
 
 /* ── Seed data ──────────────────────────────────── */
+/* Every hot take is Saqib's — your one resident hater. */
 const SEED_TAKES = {
   'tt0468569': [
-    { id:'s_dk_1', username:'FilmBro420', text:"Heath Ledger only won the Oscar because he died. The Joker is just a guy doing a weird voice in clown makeup.", spice:4, agrees:12, disagrees:87, ts:1700000000000 },
-    { id:'s_dk_2', username:'contrarian_cine', text:"The truck flip is literally the only impressive thing here. The rest is a Law & Order episode with a bigger budget.", spice:5, agrees:3, disagrees:201, ts:1700000001000 },
+    { id:'s_dk_1', username:'saqib', text:"Heath Ledger only won the Oscar because he died. The Joker is just a guy doing a weird voice in clown makeup.", spice:4, agrees:12, disagrees:87, ts:1700000000000 },
+    { id:'s_dk_2', username:'saqib', text:"The truck flip is literally the only impressive thing here. The rest is a Law & Order episode with a bigger budget.", spice:5, agrees:3, disagrees:201, ts:1700000001000 },
   ],
   'tt1375666': [
-    { id:'s_inc_1', username:'dreamskeptic', text:"The top falls. Nobody cares. The real plot hole is that Leo's character is insufferable in literally every scene.", spice:3, agrees:44, disagrees:130, ts:1700000002000 },
-    { id:'s_inc_2', username:'nolan_fatigue', text:"Nolan made a movie about dreams where nothing actually feels dreamlike. It's just a heist movie for people who think they're smart.", spice:4, agrees:68, disagrees:220, ts:1700000003000 },
+    { id:'s_inc_1', username:'saqib', text:"The top falls. Nobody cares. The real plot hole is that Leo's character is insufferable in literally every scene.", spice:3, agrees:44, disagrees:130, ts:1700000002000 },
+    { id:'s_inc_2', username:'saqib', text:"Nolan made a movie about dreams where nothing actually feels dreamlike. It's just a heist movie for people who think they're smart.", spice:4, agrees:68, disagrees:220, ts:1700000003000 },
   ],
   'tt0137523': [
-    { id:'s_fc_1', username:'soapbox_sally', text:"This movie is a manifesto for men who didn't get enough hugs. Brad Pitt is literally just wearing a leather jacket.", spice:4, agrees:22, disagrees:178, ts:1700000004000 },
-    { id:'s_fc_2', username:'first_rule_club', text:"The twist was obvious from the first 20 minutes. I've seen better mindf***s in an IKEA instruction manual.", spice:5, agrees:9, disagrees:312, ts:1700000005000 },
+    { id:'s_fc_1', username:'saqib', text:"This movie is a manifesto for men who didn't get enough hugs. Brad Pitt is literally just wearing a leather jacket.", spice:4, agrees:22, disagrees:178, ts:1700000004000 },
+    { id:'s_fc_2', username:'saqib', text:"The twist was obvious from the first 20 minutes. I've seen better mindf***s in an IKEA instruction manual.", spice:5, agrees:9, disagrees:312, ts:1700000005000 },
   ],
   'tt6751668': [
-    { id:'s_par_1', username:'subtitlehater99', text:"Every critic gave this 10/10 because they were scared of being called racist if they didn't. It's good but calm down.", spice:5, agrees:8, disagrees:303, ts:1700000006000 },
-    { id:'s_par_2', username:'parasite_pete', text:"The ending ruins everything the first two hours built. Bong just rage quit his own screenplay.", spice:4, agrees:31, disagrees:145, ts:1700000007000 },
+    { id:'s_par_1', username:'saqib', text:"Every critic gave this 10/10 because they were scared of being called racist if they didn't. It's good but calm down.", spice:5, agrees:8, disagrees:303, ts:1700000006000 },
+    { id:'s_par_2', username:'saqib', text:"The ending ruins everything the first two hours built. Bong just rage quit his own screenplay.", spice:4, agrees:31, disagrees:145, ts:1700000007000 },
   ],
   'tt0816692': [
-    { id:'s_int_1', username:'physicspolice', text:"Hans Zimmer turned the volume up to drown out McConaughey crying for three straight hours. The science is actual nonsense.", spice:3, agrees:91, disagrees:55, ts:1700000008000 },
-    { id:'s_int_2', username:'wormhole_wendy', text:"'Love is a dimension.' Christopher Nolan should be banned from writing dialogue forever.", spice:5, agrees:204, disagrees:88, ts:1700000009000 },
+    { id:'s_int_1', username:'saqib', text:"Hans Zimmer turned the volume up to drown out McConaughey crying for three straight hours. The science is actual nonsense.", spice:3, agrees:91, disagrees:55, ts:1700000008000 },
+    { id:'s_int_2', username:'saqib', text:"'Love is a dimension.' Christopher Nolan should be banned from writing dialogue forever.", spice:5, agrees:204, disagrees:88, ts:1700000009000 },
   ],
   'tt0068646': [
-    { id:'s_gf_1', username:'mafia_meh', text:"It's three hours of men whispering to each other about pasta. I get it. They're very serious. We know.", spice:3, agrees:19, disagrees:455, ts:1700000010000 },
+    { id:'s_gf_1', username:'saqib', text:"It's three hours of men whispering to each other about pasta. I get it. They're very serious. We know.", spice:3, agrees:19, disagrees:455, ts:1700000010000 },
   ],
   'tt0110912': [
-    { id:'s_pf_1', username:'tarantino_tired', text:"People who say this is their favorite movie haven't seen more than 15 films in their life. It's film school bingo.", spice:4, agrees:37, disagrees:190, ts:1700000011000 },
+    { id:'s_pf_1', username:'saqib', text:"People who say this is their favorite movie haven't seen more than 15 films in their life. It's film school bingo.", spice:4, agrees:37, disagrees:190, ts:1700000011000 },
   ],
 };
 
 const DEMO_FRIENDS = [
+  {
+    id: 'friend_saqib', username: 'saqib', displayName: 'Saqib',
+    emoji: '🌶️',
+    bio: 'Your resident hater. Every hot take in this app is mine. Fight me.',
+    logs: [
+      { movie:{ id:'tt0468569', title:'The Dark Knight', year:'2008', poster:'' }, rating:2, review:'Wildly overrated. A Law & Order episode with a Batman skin.', watchedDate:'2026-06-16' },
+      { movie:{ id:'tt0816692', title:'Interstellar', year:'2014', poster:'' }, rating:1.5, review:'Three hours of mumbling under a wall of Hans Zimmer noise.', watchedDate:'2026-06-13' },
+      { movie:{ id:'tt0110912', title:'Pulp Fiction', year:'1994', poster:'' }, rating:2.5, review:'Film-school bingo for people who own one Criterion disc.', watchedDate:'2026-06-09' },
+    ],
+  },
   {
     id: 'friend_01', username: 'marlowe', displayName: 'Marlowe Ashford',
     emoji: '🎭',
@@ -79,13 +90,14 @@ const DEFAULTS = () => ({
     avatar: '',
     background: '',
   },
-  settings: { tmdbKey: '', isPrivate: false },
+  settings: { tmdbKey: '', isPrivate: false, zip: '', radius: 25 },
   logs: [],
   watchlist: [],
   favorites: [],
   favoriteMovies: {},
   hotTakes: {},
-  following: ['friend_01', 'friend_02'],
+  reviewReactions: {},
+  following: ['friend_saqib', 'friend_01', 'friend_02'],
   followers: ['friend_03', 'friend_04'],
   blocked: [],
   demoFriendsSeeded: true,
@@ -104,15 +116,19 @@ function load() {
       profile:  { ...DEFAULTS().profile,  ...(parsed.profile  || {}) },
       settings: { ...DEFAULTS().settings, ...(parsed.settings || {}) },
       hotTakes: parsed.hotTakes || {},
-      following: parsed.following ?? ['friend_01','friend_02'],
+      reviewReactions: parsed.reviewReactions || {},
+      following: parsed.following ?? ['friend_saqib','friend_01','friend_02'],
       followers: parsed.followers ?? ['friend_03','friend_04'],
       blocked:   parsed.blocked   ?? [],
     };
   } catch { return DEFAULTS(); }
 }
 
-function persist() {
+function save() {
   try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { console.error('CINESTASH save error', e); }
+}
+function persist() {
+  save();
   window.dispatchEvent(new CustomEvent('cinestash:change'));
 }
 
@@ -228,6 +244,27 @@ export function voteHotTake(movieId, takeId, vote) {
   if (vote === 'agree')    take.agrees++;
   if (vote === 'disagree') take.disagrees++;
   persist();
+}
+
+/* ── Review reactions: like / tomato ──────────── */
+/* keyed by `${friendId}:${movieId}` → { liked:bool, tomatoes:number } */
+export const getReviewReaction = (key) => state.reviewReactions[key] || { liked: false, tomatoes: 0 };
+
+export function toggleReviewLike(key) {
+  const r = state.reviewReactions[key] || { liked: false, tomatoes: 0 };
+  r.liked = !r.liked;
+  state.reviewReactions[key] = r;
+  save();
+  return r.liked;
+}
+
+/* unlimited — every throw counts */
+export function throwTomatoAt(key) {
+  const r = state.reviewReactions[key] || { liked: false, tomatoes: 0 };
+  r.tomatoes = (r.tomatoes || 0) + 1;
+  state.reviewReactions[key] = r;
+  save();
+  return r.tomatoes;
 }
 
 /* ── Social: following / followers ───────────── */

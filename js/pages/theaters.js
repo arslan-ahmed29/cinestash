@@ -1,39 +1,90 @@
-/* ░░ pages/theaters.js — In Theaters & showtimes near you ░░ */
+/* ░░ pages/theaters.js — In Theaters & showtimes by ZIP + radius ░░
+   No device location / GPS permission. You type a ZIP and pick a radius;
+   showtimes open in Google for that ZIP and the "Theaters near me" map view
+   is zoomed to roughly match your radius (ZIP is geocoded, not your device). */
 
 import { inTheaters } from '../api.js';
-import { loaderHtml, esc } from '../ui.js';
+import { loaderHtml, esc, toast } from '../ui.js';
 import { openDetail } from '../detail.js';
+import { getSettings, updateSettings } from '../storage.js';
 
-/* cached location for this session */
-let userCity = '';
-let userLat  = null;
-let userLng  = null;
+const RADII = [5, 10, 25, 50];
+
+/* session location derived from the typed ZIP */
+let zip    = '';
+let radius = 25;
+let coords = null; // { lat, lng } once the ZIP is geocoded
 
 export async function renderTheaters(app) {
+  const s = getSettings();
+  zip    = (s.zip || '').trim();
+  radius = RADII.includes(s.radius) ? s.radius : 25;
+  coords = (s.lat != null && s.lng != null) ? { lat: s.lat, lng: s.lng } : null;
+
   app.innerHTML = `
-  <div class="page-head page-head--row fade-in">
-    <div>
-      <h1 class="page-head__title">In Theaters</h1>
-      <p class="page-head__sub" id="theaterSub">Tap "Showtimes" to find screenings near you</p>
-    </div>
-    <button class="btn btn--primary" id="locateBtn">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:15px;height:15px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-      Use my location
-    </button>
+  <div class="page-head fade-in">
+    <h1 class="page-head__title">In Theaters</h1>
+    <p class="page-head__sub" id="theaterSub">${zip ? subText(zip, radius) : 'Enter your ZIP code to find showtimes near you'}</p>
+
+    <form class="zip-bar" id="zipForm" autocomplete="off">
+      <div class="field" style="margin:0">
+        <label class="field__label" for="zipInput">ZIP code</label>
+        <input class="input zip-bar__zip" id="zipInput" type="text" inputmode="numeric" maxlength="5"
+               pattern="[0-9]{5}" placeholder="e.g. 90210" value="${esc(zip)}" />
+      </div>
+      <div class="field" style="margin:0">
+        <label class="field__label" for="radiusSelect">Within</label>
+        <select class="input zip-bar__radius" id="radiusSelect">
+          ${RADII.map(r => `<option value="${r}" ${r === radius ? 'selected' : ''}>${r} miles</option>`).join('')}
+        </select>
+      </div>
+      <button type="submit" class="btn btn--primary" id="zipSaveBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:15px;height:15px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        Set location
+      </button>
+      <a class="btn btn--tinted zip-bar__map" id="theatersMapBtn" target="_blank" rel="noopener"
+         href="${theatersMapUrl()}" style="${zip ? '' : 'display:none'}">
+        Theaters near me
+      </a>
+    </form>
   </div>
-  <div id="theatersContent" style="margin-top:8px">${loaderHtml}</div>`;
 
-  document.getElementById('locateBtn')?.addEventListener('click', locate);
+  <div id="theatersContent" style="margin-top:14px">${loaderHtml}</div>`;
 
-  /* if we already have location from a previous visit this session, restore it */
-  if (userCity) updateLocationUI();
+  document.getElementById('zipForm')?.addEventListener('submit', async e => {
+    e.preventDefault();
+    const v = (document.getElementById('zipInput').value || '').replace(/\D/g, '').slice(0, 5);
+    const r = parseInt(document.getElementById('radiusSelect').value, 10) || 25;
+    if (v.length !== 5) { toast('Enter a 5-digit ZIP code', '⚠️'); return; }
 
+    zip = v; radius = r; coords = null;
+    updateSettings({ zip, radius, lat: null, lng: null });
+    document.getElementById('theaterSub').textContent = subText(zip, radius);
+    refreshLinks();
+    toast(`Showtimes set to ${zip}`, '📍');
+
+    /* geocode the ZIP (free, no key, no GPS permission) so radius can zoom the map */
+    coords = await geocodeZip(zip);
+    if (coords) updateSettings({ lat: coords.lat, lng: coords.lng });
+    refreshLinks();
+  });
+
+  /* changing radius re-tunes links/map immediately when a ZIP is already set */
+  document.getElementById('radiusSelect')?.addEventListener('change', e => {
+    radius = parseInt(e.target.value, 10) || 25;
+    if (zip) {
+      updateSettings({ radius });
+      document.getElementById('theaterSub').textContent = subText(zip, radius);
+      refreshLinks();
+    }
+  });
+
+  /* films */
   let movies = [];
   try { movies = await inTheaters(); } catch { movies = []; }
 
   const content = document.getElementById('theatersContent');
-  const loader  = content?.querySelector('.loader');
-  if (loader) loader.remove();
+  content?.querySelector('.loader')?.remove();
 
   if (!movies.length) {
     content?.insertAdjacentHTML('beforeend', `
@@ -52,68 +103,49 @@ export async function renderTheaters(app) {
 
   const grid = document.getElementById('theatersGrid');
   grid?.addEventListener('click', e => {
-    if (e.target.closest('.theater-card__showtimes')) return;
+    if (e.target.closest('.theater-card__showtimes')) return; // let the link open
     const card = e.target.closest('.theater-card[data-movie-id]');
     if (card) openDetail({ id: card.dataset.movieId, title: card.dataset.title, year: card.dataset.year, poster: card.dataset.poster });
   });
 }
 
-/* ── Geolocation ───────────────────────────────────── */
-async function locate() {
-  const btn = document.getElementById('locateBtn');
-  if (!navigator.geolocation) { alert('Your browser doesn\'t support location access.'); return; }
+/* ── Helpers ───────────────────────────────────────── */
+function subText(z, r) {
+  return `Showtimes near ${z} · within ${r} miles`;
+}
 
-  if (btn) { btn.textContent = 'Locating…'; btn.disabled = true; }
-
+async function geocodeZip(z) {
   try {
-    const pos = await new Promise((res, rej) =>
-      navigator.geolocation.getCurrentPosition(res, rej, { timeout: 10000 })
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?postalcode=${encodeURIComponent(z)}&country=us&format=json&limit=1`,
+      { headers: { 'Accept-Language': 'en' } }
     );
-    userLat = pos.coords.latitude;
-    userLng = pos.coords.longitude;
-
-    /* Reverse-geocode with OpenStreetMap Nominatim (free, no key, CORS ok) */
-    try {
-      const r = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?lat=${userLat}&lon=${userLng}&format=json`,
-        { headers: { 'Accept-Language': 'en' } }
-      );
-      const geo = await r.json();
-      userCity = geo.address?.city || geo.address?.town || geo.address?.suburb || geo.address?.county || '';
-    } catch { userCity = ''; }
-
-    updateLocationUI();
-    updateShowtimeLinks();
-  } catch {
-    if (btn) { btn.textContent = 'Location denied'; btn.disabled = false; }
-  }
+    const j = await res.json();
+    if (Array.isArray(j) && j[0]) return { lat: parseFloat(j[0].lat), lng: parseFloat(j[0].lon) };
+  } catch { /* fall back to text search */ }
+  return null;
 }
 
-function updateLocationUI() {
-  const sub = document.getElementById('theaterSub');
-  const btn = document.getElementById('locateBtn');
-  if (sub) sub.textContent = userCity
-    ? `Showing showtimes near ${userCity}`
-    : 'Location set — showtimes links updated';
-  if (btn) {
-    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:15px;height:15px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg> ${userCity || 'Located'}`;
-    btn.disabled = false;
-    btn.classList.add('btn--tinted');
-    btn.classList.remove('btn--primary');
-  }
-}
-
-function updateShowtimeLinks() {
+function refreshLinks() {
   document.querySelectorAll('.theater-card__showtimes').forEach(a => {
     const title = a.closest('.theater-card')?.dataset.title || '';
     a.href = showtimesUrl(title);
   });
+  const mapBtn = document.getElementById('theatersMapBtn');
+  if (mapBtn) { mapBtn.href = theatersMapUrl(); mapBtn.style.display = zip ? '' : 'none'; }
 }
 
 function showtimesUrl(title) {
-  const loc  = userCity || (userLat != null ? `${userLat.toFixed(4)},${userLng.toFixed(4)}` : '');
-  const q    = `${title} showtimes${loc ? ' near ' + loc : ' near me'}`;
-  return `https://www.google.com/search?q=${encodeURIComponent(q)}`;
+  const where  = zip ? ` near ${zip}` : ' near me';
+  const within = (zip && radius) ? ` within ${radius} miles` : '';
+  return `https://www.google.com/search?q=${encodeURIComponent(`${title} showtimes${where}${within}`)}`;
+}
+
+function theatersMapUrl() {
+  const zoom = radius >= 50 ? 9 : radius >= 25 ? 10 : radius >= 10 ? 11 : 12;
+  if (coords) return `https://www.google.com/maps/search/movie+theaters/@${coords.lat},${coords.lng},${zoom}z`;
+  if (zip)    return `https://www.google.com/maps/search/${encodeURIComponent(`movie theaters near ${zip}`)}`;
+  return 'https://www.google.com/maps/search/movie+theaters+near+me';
 }
 
 function theaterCard(m) {
@@ -127,7 +159,7 @@ function theaterCard(m) {
       <div class="theater-card__year">${m.year || ''}</div>
       ${m.overview ? `<p class="theater-card__overview">${esc(m.overview)}</p>` : ''}
       <a class="btn btn--primary btn--sm theater-card__showtimes" href="${showtimesUrl(m.title)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:14px;height:14px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" style="width:14px;height:14px"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z"/></svg>
         Showtimes
       </a>
     </div>

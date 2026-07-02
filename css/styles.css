@@ -160,18 +160,23 @@ input, textarea, select { font: inherit; color: inherit; }
 .brand { display: flex; align-items: center; gap: 9px; flex-shrink: 0; }
 .brand__logo {
   width: 34px; height: 34px; flex-shrink: 0;
-  box-shadow: 0 3px 10px rgba(255,45,85,0.35);
+  box-shadow: 0 0 12px rgba(255,45,85,0.55), 0 3px 10px rgba(255,45,85,0.35);
   border-radius: 9px;
-  transition: transform .2s var(--spring);
+  transition: transform .2s var(--spring), box-shadow .2s var(--spring);
 }
-.brand:hover .brand__logo { transform: rotate(8deg) scale(1.08); }
+.brand:hover .brand__logo {
+  transform: rotate(8deg) scale(1.08);
+  box-shadow: 0 0 18px rgba(255,45,85,0.8), 0 3px 12px rgba(255,45,85,0.45);
+}
 .brand__name {
-  font-family: 'Bebas Neue', 'SF Pro Display', system-ui, sans-serif;
-  font-size: 26px; letter-spacing: 3px; line-height: 1;
+  font-family: 'Monoton', 'Bebas Neue', 'SF Pro Display', system-ui, sans-serif;
+  font-size: 21px; letter-spacing: 1px; line-height: 1;
   color: var(--label); font-weight: 400;
+  text-shadow: 0 0 7px rgba(255,45,85,0.30);
 }
 .brand__name em {
   font-style: normal; color: var(--accent);
+  text-shadow: 0 0 8px var(--accent), 0 0 18px rgba(255,45,85,0.55);
 }
 
 /* Search */
@@ -218,6 +223,15 @@ input, textarea, select { font: inherit; color: inherit; }
 .nav__link.is-active { color: var(--accent); background: var(--accent-bg); }
 .nav__icon-btn { padding: 8px; }
 .nav__icon-btn span { display: none; }
+.nav__routes { display: flex; align-items: center; gap: 2px; }
+.tabbar { display: none; }
+
+/* ── Theaters: ZIP + radius bar ───────────────────── */
+.zip-bar { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; margin-top: 16px; }
+.zip-bar .field__label { margin-bottom: 5px; }
+.zip-bar__zip { width: 120px; }
+.zip-bar__radius { min-width: 122px; cursor: pointer; }
+.zip-bar__map { text-decoration: none; }
 
 /* ── App layout ──────────────────────────────────── */
 .app { max-width: 1360px; margin: 0 auto; padding: 0 20px 100px; }
@@ -1012,6 +1026,93 @@ input, textarea, select { font: inherit; color: inherit; }
 @media (max-width: 560px) {
   .app, .nav__inner { padding-left: 14px; padding-right: 14px; }
   .search { max-width: none; }
-  .brand__name { font-size: 16px; }
+  .brand__name { font-size: 14px; letter-spacing: 0.5px; }
   .profile__social { flex-wrap: wrap; }
 }
+
+/* ── Friend search (empty state) ─────────────────── */
+.friends-search__input { max-width: 440px; }
+.ios-list__empty { padding: 18px 16px; color: var(--label-3); font-size: 14px; text-align: center; }
+
+/* ── Review reactions: like / throw-tomato ───────── */
+.review-react { display: flex; gap: 8px; margin-top: 9px; }
+.review-react__btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: inherit; font-size: 12.5px; font-weight: 600;
+  color: var(--label-2); background: var(--fill);
+  border: none; border-radius: 999px; padding: 5px 11px;
+  cursor: pointer; white-space: nowrap;
+  transition: background .15s, color .15s, transform .08s;
+}
+.review-react__btn:hover { background: var(--fill-2); }
+.review-react__btn:active { transform: scale(0.93); }
+.review-react__btn.is-liked { background: var(--accent-bg); color: var(--accent); }
+.review-react__tomato:hover { background: rgba(207,43,34,0.14); color: #cf2b22; }
+.review-react__btn strong { font-weight: 800; }
+.review-react__emoji { font-size: 13px; }
+
+/* ── Tomato throw animation layer ────────────────── */
+.tomato-layer { position: fixed; inset: 0; pointer-events: none; z-index: 9999; overflow: hidden; }
+.tomato-fly {
+  position: fixed; top: 0; left: 0; font-size: 46px; line-height: 1;
+  will-change: transform; filter: drop-shadow(0 6px 6px rgba(0,0,0,0.3));
+}
+.tomato-splat {
+  position: fixed; width: 98px; height: 88px;
+  will-change: transform, opacity;
+  background: radial-gradient(circle at 48% 42%, #ef4631 0%, #cf2b22 52%, rgba(207,43,34,0) 72%);
+  border-radius: 46% 54% 52% 48% / 56% 50% 50% 44%;
+  filter: drop-shadow(0 0 5px rgba(226,59,46,0.45));
+}
+.tomato-splat::before, .tomato-splat::after { content: ''; position: absolute; background: #cf2b22; }
+.tomato-splat::before { width: 22px; height: 20px; top: -7px; left: 10px; border-radius: 50% 50% 48% 52%; }
+.tomato-splat::after  { width: 15px; height: 14px; bottom: 4px; right: 8px; border-radius: 50%; }
+
+/* ── Mobile: bottom tab bar + touch polish (≤600px) ─ */
+@media (max-width: 600px) {
+  /* move primary nav to a fixed bottom tab bar */
+  .nav__routes { display: none; }
+  .tabbar {
+    display: flex; justify-content: space-around; align-items: stretch;
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
+    gap: 2px; padding: 7px 6px calc(7px + env(safe-area-inset-bottom));
+    background: rgba(242,242,247,0.94);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-top: 0.5px solid var(--sep);
+  }
+  .tabbar .nav__link {
+    flex: 1; flex-direction: column; gap: 3px;
+    padding: 5px 2px; border-radius: var(--r-sm);
+    color: var(--label-2); font-size: 10px; font-weight: 600;
+  }
+  .tabbar .nav__link span { display: inline; font-size: 10px; letter-spacing: 0.1px; }
+  .tabbar .nav__link svg { width: 23px; height: 23px; }
+  .tabbar .nav__link.is-active { color: var(--accent); background: transparent; }
+
+  /* keep content + toasts clear of the bar (+ iOS safe area) */
+  .app   { padding-bottom: calc(82px + env(safe-area-inset-bottom)); }
+  .toast { bottom: calc(84px + env(safe-area-inset-bottom)); }
+
+  /* bigger touch targets + readable reviews for showing friends */
+  .review-react { gap: 10px; margin-top: 10px; }
+  .review-react__btn { font-size: 13px; padding: 9px 15px; min-height: 40px; }
+  .friend-item__review {
+    white-space: normal; overflow: visible;
+    display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical;
+  }
+  .friend-item__poster { width: 52px; }
+
+  /* theaters: let the ZIP field grow, map button go full width */
+  .zip-bar__zip { flex: 1; min-width: 110px; }
+  .zip-bar__radius { flex: 1; }
+  .zip-bar__map { width: 100%; justify-content: center; }
+  .theaters { grid-template-columns: 1fr; }
+
+  /* tighten page chrome on small screens */
+  .page-head { margin-top: 18px; }
+  .page-head__title { font-size: 26px; }
+  .section { margin-top: 28px; }
+  .section__title { font-size: 18px; }
+}
+[data-theme="dark"] .tabbar { background: rgba(28,28,30,0.94); }
