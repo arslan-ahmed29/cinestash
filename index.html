@@ -2,18 +2,30 @@
 <html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="description" content="CINESTASH — your personal stash of every film you've ever watched." />
   <meta name="theme-color" content="#F2F2F7" media="(prefers-color-scheme: light)" />
   <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
   <title>CINESTASH</title>
+
+  <!-- ░░ Installable home-screen app (PWA) ░░ -->
+  <link rel="manifest" href="./manifest.json?v=cb3" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="CineStash" />
+  <link rel="apple-touch-icon" sizes="180x180" href="./icons/icon-180.png" />
+  <link rel="apple-touch-icon" sizes="152x152" href="./icons/icon-152.png" />
+  <link rel="apple-touch-icon" sizes="167x167" href="./icons/icon-167.png" />
+  <link rel="apple-touch-icon" sizes="120x120" href="./icons/icon-120.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png" />
+
   <link rel="preconnect" href="https://image.tmdb.org" />
   <link rel="preconnect" href="https://api.themoviedb.org" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Monoton&family=Bebas+Neue&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./css/styles.css?v=cb2" />
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>" />
+  <link rel="stylesheet" href="./css/styles.css?v=cb3" />
 </head>
 <body>
   <!-- ░░ Nav ░░ -->
@@ -139,6 +151,6 @@
   <!-- ░░ Toast ░░ -->
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script type="module" src="./js/app.js?v=cb2"></script>
+  <script type="module" src="./js/app.js?v=cb3"></script>
 </body>
 </html>

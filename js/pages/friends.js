@@ -1,10 +1,10 @@
 /* ░░ pages/friends.js — Friends activity feed ░░ */
 
 import { getDemoFriends, getFollowing, follow, unfollow, isFollowing, isBlocked,
-         getReviewReaction, toggleReviewLike, throwTomatoAt } from '../storage.js?v=cb2';
-import { poster } from '../api.js?v=cb2';
-import { starsHtml, esc, toast, openModal, closeModal } from '../ui.js?v=cb2';
-import { openDetail } from '../detail.js?v=cb2';
+         getReviewReaction, toggleReviewLike, throwTomatoAt } from '../storage.js?v=cb3';
+import { poster } from '../api.js?v=cb3';
+import { starsHtml, esc, toast, openModal, closeModal } from '../ui.js?v=cb3';
+import { openDetail } from '../detail.js?v=cb3';
 
 export function renderFriends(app) {
   const friends   = getDemoFriends().filter(f => !isBlocked(f.id));
