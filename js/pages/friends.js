@@ -2,10 +2,10 @@
 
 import { getDemoFriends, getFollowing, follow, unfollow, isFollowing, isBlocked,
          getReviewReaction, toggleReviewLike, throwTomatoAt,
-         getLogs, getLogFor } from '../storage.js?v=cb4';
-import { poster } from '../api.js?v=cb4';
-import { starsHtml, esc, toast, openModal, closeModal } from '../ui.js?v=cb4';
-import { openDetail } from '../detail.js?v=cb4';
+         getLogs, getLogFor } from '../storage.js?v=cb5';
+import { poster } from '../api.js?v=cb5';
+import { starsHtml, esc, toast, openModal, closeModal } from '../ui.js?v=cb5';
+import { openDetail } from '../detail.js?v=cb5';
 
 export function renderFriends(app) {
   const friends   = getDemoFriends().filter(f => !isBlocked(f.id));

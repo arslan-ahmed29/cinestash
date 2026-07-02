@@ -4,12 +4,12 @@
    cinemas near that point are pulled from OpenStreetMap (Overpass API,
    free/no key) and listed in-app — not just a link out to Google. */
 
-import { inTheaters } from '../api.js?v=cb4';
-import { loaderHtml, esc, toast, openModal, closeModal } from '../ui.js?v=cb4';
-import { openDetail } from '../detail.js?v=cb4';
+import { inTheaters } from '../api.js?v=cb5';
+import { loaderHtml, esc, toast, openModal, closeModal } from '../ui.js?v=cb5';
+import { openDetail } from '../detail.js?v=cb5';
 import { getSettings, updateSettings,
          getMovieNights, createMovieNight, cancelMovieNight,
-         getDemoFriends, isBlocked } from '../storage.js?v=cb4';
+         getDemoFriends, isBlocked } from '../storage.js?v=cb5';
 
 const RADII = [5, 10, 25, 50];
 const OVERPASS_ENDPOINTS = [

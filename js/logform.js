@@ -1,8 +1,8 @@
 /* ░░ logform.js — log / edit a film ░░ */
 
-import { poster } from './api.js?v=cb4';
-import { logMovie, deleteLog } from './storage.js?v=cb4';
-import { openModal, closeModal, toast, esc } from './ui.js?v=cb4';
+import { poster } from './api.js?v=cb5';
+import { logMovie, deleteLog } from './storage.js?v=cb5';
+import { openModal, closeModal, toast, esc } from './ui.js?v=cb5';
 
 export function openLogForm(movie, existingLog = null) {
   const today = new Date().toISOString().slice(0, 10);
@@ -20,10 +20,11 @@ export function openLogForm(movie, existingLog = null) {
     </div>
 
     <div class="field">
-      <label class="field__label">Your rating</label>
+      <label class="field__label">Your rating <span style="color:var(--faint);font-weight:400">(tap left half of a star for ½)</span></label>
       <div style="display:flex;align-items:center;gap:8px">
-        <div class="stars-input" id="starsInput" role="group" aria-label="Star rating">
-          ${[1,2,3,4,5].map(i => `<span class="star${existing?.rating >= i ? ' on' : ''}" data-val="${i}" role="radio" aria-label="${i} star${i>1?'s':''}" tabindex="0">★</span>`).join('')}
+        <div class="stars-input" id="starsInput" role="slider" aria-label="Star rating"
+             aria-valuemin="0" aria-valuemax="5" aria-valuenow="${existing?.rating || 0}" tabindex="0">
+          ${[1,2,3,4,5].map(i => `<span class="star" data-val="${i}">★</span>`).join('')}
         </div>
         <span class="stars-hint" id="starsHint">${ratingLabel(existing?.rating)}</span>
       </div>
@@ -64,23 +65,51 @@ export function openLogForm(movie, existingLog = null) {
 
   function setStars(val) {
     currentRating = val;
-    ratingInput.value = val;
+    ratingInput.value = val || '';
     hint.textContent = ratingLabel(val);
+    starsEl.setAttribute('aria-valuenow', val);
     starsEl.querySelectorAll('.star').forEach((s, i) => {
-      s.classList.toggle('on', i < val);
+      const n = i + 1;
+      s.classList.toggle('on',   val >= n);
+      s.classList.toggle('half', val === n - 0.5);
     });
+  }
+  setStars(currentRating);
+
+  /* click left half of a star → ½, right half → full; same value again → clear */
+  function valueFromEvent(e) {
+    const star = e.target.closest('[data-val]');
+    if (!star) return null;
+    const n = parseInt(star.dataset.val, 10);
+    const rect = star.getBoundingClientRect();
+    const isLeftHalf = (e.clientX - rect.left) < rect.width / 2;
+    return isLeftHalf ? n - 0.5 : n;
   }
 
   starsEl.addEventListener('click', e => {
-    const star = e.target.closest('[data-val]');
-    if (!star) return;
-    const val = parseInt(star.dataset.val);
-    if (currentRating === val) setStars(0); // deselect on same star
-    else setStars(val);
+    const val = valueFromEvent(e);
+    if (val == null) return;
+    setStars(val === currentRating ? 0 : val);
   });
+
+  /* live preview while hovering (mouse only) */
+  starsEl.addEventListener('mousemove', e => {
+    const val = valueFromEvent(e);
+    if (val == null) return;
+    starsEl.querySelectorAll('.star').forEach((s, i) => {
+      const n = i + 1;
+      s.classList.toggle('preview',      val >= n);
+      s.classList.toggle('preview-half', val === n - 0.5);
+    });
+  });
+  starsEl.addEventListener('mouseleave', () => {
+    starsEl.querySelectorAll('.star').forEach(s => s.classList.remove('preview', 'preview-half'));
+  });
+
+  /* arrow keys step by half a star */
   starsEl.addEventListener('keydown', e => {
-    if (e.key === 'ArrowRight' && currentRating < 5) setStars(currentRating + 1);
-    if (e.key === 'ArrowLeft'  && currentRating > 0) setStars(currentRating - 1);
+    if (e.key === 'ArrowRight' && currentRating < 5) { e.preventDefault(); setStars(currentRating + 0.5); }
+    if (e.key === 'ArrowLeft'  && currentRating > 0) { e.preventDefault(); setStars(currentRating - 0.5); }
   });
 
   /* save */
@@ -109,5 +138,5 @@ export function openLogForm(movie, existingLog = null) {
 
 const LABELS = ['', 'Terrible', 'Bad', 'Decent', 'Good', 'Amazing'];
 function ratingLabel(r) {
-  return r ? `${LABELS[Math.floor(r)] || r} (${r}/5)` : 'No rating';
+  return r ? `${LABELS[Math.round(r)] || r} (${r}/5)` : 'No rating';
 }

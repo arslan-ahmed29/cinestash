@@ -770,6 +770,16 @@ input, textarea, select { font: inherit; color: inherit; }
 .stars-input .star { cursor: pointer; transition: transform .1s var(--spring), color .1s; line-height: 1; }
 .stars-input .star:hover { transform: scale(1.2); }
 .stars-input .star.on { color: var(--gold); }
+/* half-filled star: gold left half, faint right half, clipped to the glyph */
+.stars-input .star.half,
+.stars-input .star.preview-half {
+  background: linear-gradient(90deg, var(--gold) 50%, var(--label-4) 50%);
+  -webkit-background-clip: text; background-clip: text;
+  color: transparent;
+}
+/* hover preview tint (full-star) */
+.stars-input .star.preview { color: var(--gold); opacity: 0.75; }
+.stars-input .star.preview-half { opacity: 0.75; }
 .stars-hint { color: var(--label-2); font-size: 13px; margin-left: 10px; }
 
 /* ── Settings dialog ─────────────────────────────── */

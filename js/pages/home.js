@@ -4,12 +4,12 @@ import { getProfile, getFavorites, getRecentLogs, stats, updateProfile,
          toggleWatchlist, getFollowing, getFollowers, getDemoFriends,
          follow, unfollow, isFollowing,
          removeFollower, blockUser, unblockUser, getBlocked, isBlocked,
-         isPrivate, setPrivacy } from '../storage.js?v=cb4';
-import { trending } from '../api.js?v=cb4';
-import { cardHtml, carouselHtml, attachCarouselNav, toast, esc, fileToDataUrl, loaderHtml } from '../ui.js?v=cb4';
-import { openModal, closeModal } from '../ui.js?v=cb4';
-import { openDetail } from '../detail.js?v=cb4';
-import { openLogForm } from '../logform.js?v=cb4';
+         isPrivate, setPrivacy } from '../storage.js?v=cb5';
+import { trending } from '../api.js?v=cb5';
+import { cardHtml, carouselHtml, attachCarouselNav, toast, esc, fileToDataUrl, loaderHtml } from '../ui.js?v=cb5';
+import { openModal, closeModal } from '../ui.js?v=cb5';
+import { openDetail } from '../detail.js?v=cb5';
+import { openLogForm } from '../logform.js?v=cb5';
 
 export async function renderHome(app) {
   const profile  = getProfile();
@@ -386,7 +386,7 @@ async function loadTrending() {
   const sec = document.getElementById('trendingSection');
   if (!sec) return;
   try {
-    const { trending } = await import('../api.js?v=cb4');
+    const { trending } = await import('../api.js?v=cb5');
     const movies = await trending();
     const placeholder = sec.querySelector('.loader');
     if (placeholder) placeholder.remove();

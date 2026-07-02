@@ -1,9 +1,9 @@
 /* ░░ pages/watchlist.js ░░ */
 
-import { getWatchlist, toggleWatchlist, isWatchlisted } from '../storage.js?v=cb4';
-import { cardHtml, toast } from '../ui.js?v=cb4';
-import { bindCardEvents } from './home.js?v=cb4';
-import { openSearchPicker } from '../searchpicker.js?v=cb4';
+import { getWatchlist, toggleWatchlist, isWatchlisted } from '../storage.js?v=cb5';
+import { cardHtml, toast } from '../ui.js?v=cb5';
+import { bindCardEvents } from './home.js?v=cb5';
+import { openSearchPicker } from '../searchpicker.js?v=cb5';
 
 export function renderWatchlist(app) {
   const list = getWatchlist();
