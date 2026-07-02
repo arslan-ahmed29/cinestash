@@ -1,7 +1,7 @@
 /* ░░ ui.js — shared render helpers ░░ */
 
-import { poster, backdrop } from './api.js?v=cb1';
-import { isWatchlisted, isFavorite, getLogFor } from './storage.js?v=cb1';
+import { poster, backdrop } from './api.js?v=cb2';
+import { isWatchlisted, isFavorite, getLogFor } from './storage.js?v=cb2';
 
 /* ── toast ─────────────────────────────────────────── */
 let toastTimer;

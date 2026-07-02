@@ -1,11 +1,11 @@
 /* ░░ pages/diary.js — Full viewing diary ░░ */
 
-import { getLogs, getLogFor, deleteLog, stats } from '../storage.js?v=cb1';
-import { poster } from '../api.js?v=cb1';
-import { starsHtml, toast, esc } from '../ui.js?v=cb1';
-import { openDetail } from '../detail.js?v=cb1';
-import { openLogForm } from '../logform.js?v=cb1';
-import { openSearchPicker } from '../searchpicker.js?v=cb1';
+import { getLogs, getLogFor, deleteLog, stats } from '../storage.js?v=cb2';
+import { poster } from '../api.js?v=cb2';
+import { starsHtml, toast, esc } from '../ui.js?v=cb2';
+import { openDetail } from '../detail.js?v=cb2';
+import { openLogForm } from '../logform.js?v=cb2';
+import { openSearchPicker } from '../searchpicker.js?v=cb2';
 
 export function renderDiary(app) {
   const logs = getLogs();

@@ -1,15 +1,15 @@
 /* ░░ app.js — router + bootstrap ░░ */
 
-import { initTheme, toggleTheme, updateToggleBtn } from './themes.js?v=cb1';
-import { renderHome } from './pages/home.js?v=cb1';
-import { renderWatchlist } from './pages/watchlist.js?v=cb1';
-import { renderDiary } from './pages/diary.js?v=cb1';
-import { renderSearch } from './pages/search.js?v=cb1';
-import { renderFriends } from './pages/friends.js?v=cb1';
-import { renderTheaters } from './pages/theaters.js?v=cb1';
-import { openSettings } from './settings.js?v=cb1';
-import { openDetail } from './detail.js?v=cb1';
-import { initNavSearch } from './navsearch.js?v=cb1';
+import { initTheme, toggleTheme, updateToggleBtn } from './themes.js?v=cb2';
+import { renderHome } from './pages/home.js?v=cb2';
+import { renderWatchlist } from './pages/watchlist.js?v=cb2';
+import { renderDiary } from './pages/diary.js?v=cb2';
+import { renderSearch } from './pages/search.js?v=cb2';
+import { renderFriends } from './pages/friends.js?v=cb2';
+import { renderTheaters } from './pages/theaters.js?v=cb2';
+import { openSettings } from './settings.js?v=cb2';
+import { openDetail } from './detail.js?v=cb2';
+import { initNavSearch } from './navsearch.js?v=cb2';
 
 const app = document.getElementById('app');
 

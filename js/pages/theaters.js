@@ -1,14 +1,19 @@
-/* ░░ pages/theaters.js — In Theaters & showtimes by ZIP + radius ░░
+/* ░░ pages/theaters.js — In Theaters & real nearby theaters by ZIP + radius ░░
    No device location / GPS permission. You type a ZIP and pick a radius;
-   showtimes open in Google for that ZIP and the "Theaters near me" map view
-   is zoomed to roughly match your radius (ZIP is geocoded, not your device). */
+   the ZIP is geocoded (Nominatim, free/no key) to lat/lng, then actual
+   cinemas near that point are pulled from OpenStreetMap (Overpass API,
+   free/no key) and listed in-app — not just a link out to Google. */
 
-import { inTheaters } from '../api.js?v=cb1';
-import { loaderHtml, esc, toast } from '../ui.js?v=cb1';
-import { openDetail } from '../detail.js?v=cb1';
-import { getSettings, updateSettings } from '../storage.js?v=cb1';
+import { inTheaters } from '../api.js?v=cb2';
+import { loaderHtml, esc, toast } from '../ui.js?v=cb2';
+import { openDetail } from '../detail.js?v=cb2';
+import { getSettings, updateSettings } from '../storage.js?v=cb2';
 
 const RADII = [5, 10, 25, 50];
+const OVERPASS_ENDPOINTS = [
+  'https://overpass-api.de/api/interpreter',
+  'https://overpass.kumi.systems/api/interpreter',
+];
 
 /* session location derived from the typed ZIP */
 let zip    = '';
@@ -49,6 +54,7 @@ export async function renderTheaters(app) {
     </form>
   </div>
 
+  <div id="nearbyTheatersSection" style="margin-top:20px"></div>
   <div id="theatersContent" style="margin-top:14px">${loaderHtml}</div>`;
 
   document.getElementById('zipForm')?.addEventListener('submit', async e => {
@@ -67,6 +73,7 @@ export async function renderTheaters(app) {
     coords = await geocodeZip(zip);
     if (coords) updateSettings({ lat: coords.lat, lng: coords.lng });
     refreshLinks();
+    loadNearbyTheaters();
   });
 
   /* changing radius re-tunes links/map immediately when a ZIP is already set */
@@ -76,8 +83,18 @@ export async function renderTheaters(app) {
       updateSettings({ radius });
       document.getElementById('theaterSub').textContent = subText(zip, radius);
       refreshLinks();
+      loadNearbyTheaters();
     }
   });
+
+  /* if we already have a saved ZIP+coords, list real nearby theaters right away */
+  if (zip && coords) loadNearbyTheaters();
+  else if (zip && !coords) {
+    /* have a ZIP but never geocoded it (older save) — geocode then load */
+    geocodeZip(zip).then(c => {
+      if (c) { coords = c; updateSettings({ lat: c.lat, lng: c.lng }); refreshLinks(); loadNearbyTheaters(); }
+    });
+  }
 
   /* films */
   let movies = [];
@@ -107,6 +124,114 @@ export async function renderTheaters(app) {
     const card = e.target.closest('.theater-card[data-movie-id]');
     if (card) openDetail({ id: card.dataset.movieId, title: card.dataset.title, year: card.dataset.year, poster: card.dataset.poster });
   });
+}
+
+/* ── Real nearby theaters (OpenStreetMap Overpass, free, no key) ──── */
+async function loadNearbyTheaters() {
+  const el = document.getElementById('nearbyTheatersSection');
+  if (!el || !coords) return;
+
+  el.innerHTML = `
+    <h2 style="font-size:17px;font-weight:700;letter-spacing:-0.2px;margin-bottom:12px">Theaters Near You</h2>
+    <div class="loader" style="padding:32px 0"><div class="loader__ring"></div></div>`;
+
+  let venues = [];
+  try {
+    venues = await fetchNearbyTheaters(coords.lat, coords.lng, radius);
+  } catch { venues = null; }
+
+  if (venues === null) {
+    el.innerHTML = `
+      <h2 style="font-size:17px;font-weight:700;letter-spacing:-0.2px;margin-bottom:12px">Theaters Near You</h2>
+      <div class="empty" style="padding:32px 16px">
+        <div class="empty__icon">🗺️</div>
+        <div class="empty__title">Couldn't load nearby theaters</div>
+        <div class="empty__text">Try the "Theaters near me" map link above instead.</div>
+      </div>`;
+    return;
+  }
+
+  if (!venues.length) {
+    el.innerHTML = `
+      <h2 style="font-size:17px;font-weight:700;letter-spacing:-0.2px;margin-bottom:12px">Theaters Near You</h2>
+      <div class="empty" style="padding:32px 16px">
+        <div class="empty__icon">🍿</div>
+        <div class="empty__title">No theaters found within ${radius} miles</div>
+        <div class="empty__text">Try a bigger radius above.</div>
+      </div>`;
+    return;
+  }
+
+  el.innerHTML = `
+    <h2 style="font-size:17px;font-weight:700;letter-spacing:-0.2px;margin-bottom:12px">Theaters Near You</h2>
+    <div class="venues fade-in">${venues.map(venueCard).join('')}</div>`;
+}
+
+async function fetchNearbyTheaters(lat, lng, radiusMiles) {
+  const meters = Math.round(Math.min(radiusMiles, 50) * 1609.34);
+  const query = `[out:json][timeout:20];(node["amenity"="cinema"](around:${meters},${lat},${lng});way["amenity"="cinema"](around:${meters},${lat},${lng}););out center tags;`;
+
+  let json = null;
+  for (const endpoint of OVERPASS_ENDPOINTS) {
+    try {
+      const res = await fetch(`${endpoint}?data=${encodeURIComponent(query)}`);
+      if (!res.ok) continue;
+      json = await res.json();
+      break;
+    } catch { /* try next mirror */ }
+  }
+  if (!json) throw new Error('Overpass unreachable');
+
+  const venues = (json.elements || [])
+    .map(el => {
+      const t = el.tags || {};
+      const vlat = el.lat ?? el.center?.lat;
+      const vlng = el.lon ?? el.center?.lon;
+      if (vlat == null || vlng == null || !t.name) return null;
+      return {
+        name: t.name,
+        address: formatAddress(t),
+        lat: vlat, lng: vlng,
+        distanceMi: haversineMiles(lat, lng, vlat, vlng),
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.distanceMi - b.distanceMi)
+    .slice(0, 15);
+
+  return venues;
+}
+
+function formatAddress(t) {
+  const parts = [
+    [t['addr:housenumber'], t['addr:street']].filter(Boolean).join(' '),
+    t['addr:city'], t['addr:state'], t['addr:postcode'],
+  ].filter(Boolean);
+  return parts.join(', ');
+}
+
+function haversineMiles(lat1, lon1, lat2, lon2) {
+  const R = 3958.8; // miles
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function venueCard(v) {
+  const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${v.lat},${v.lng}`;
+  const showtimesUrlV = `https://www.google.com/search?q=${encodeURIComponent(`${v.name} showtimes`)}`;
+  return `
+  <div class="venue-card">
+    <div class="venue-card__body">
+      <div class="venue-card__name">${esc(v.name)}</div>
+      <div class="venue-card__meta">${v.distanceMi.toFixed(1)} mi away${v.address ? ` · ${esc(v.address)}` : ''}</div>
+    </div>
+    <div class="venue-card__actions">
+      <a class="btn btn--sm btn--primary" href="${showtimesUrlV}" target="_blank" rel="noopener">Showtimes</a>
+      <a class="btn btn--sm btn--tinted" href="${directionsUrl}" target="_blank" rel="noopener">Directions</a>
+    </div>
+  </div>`;
 }
 
 /* ── Helpers ───────────────────────────────────────── */
