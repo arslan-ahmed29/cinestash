@@ -1,7 +1,7 @@
 /* ░░ settings.js — API key + profile settings modal ░░ */
 
-import { getProfile, updateProfile, exportData, importData, wipe } from './storage.js?v=cb5';
-import { openModal, closeModal, toast, esc } from './ui.js?v=cb5';
+import { getProfile, updateProfile, exportData, importData, wipe } from './storage.js?v=cb6';
+import { openModal, closeModal, toast, esc } from './ui.js?v=cb6';
 
 export function openSettings() {
   const p = getProfile();

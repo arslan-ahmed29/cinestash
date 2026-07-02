@@ -1,15 +1,15 @@
 /* ░░ app.js — router + bootstrap ░░ */
 
-import { initTheme, toggleTheme, updateToggleBtn } from './themes.js?v=cb5';
-import { renderHome } from './pages/home.js?v=cb5';
-import { renderWatchlist } from './pages/watchlist.js?v=cb5';
-import { renderDiary } from './pages/diary.js?v=cb5';
-import { renderSearch } from './pages/search.js?v=cb5';
-import { renderFriends } from './pages/friends.js?v=cb5';
-import { renderTheaters } from './pages/theaters.js?v=cb5';
-import { openSettings } from './settings.js?v=cb5';
-import { openDetail } from './detail.js?v=cb5';
-import { initNavSearch } from './navsearch.js?v=cb5';
+import { initTheme, toggleTheme, updateToggleBtn } from './themes.js?v=cb6';
+import { renderHome } from './pages/home.js?v=cb6';
+import { renderWatchlist } from './pages/watchlist.js?v=cb6';
+import { renderDiary } from './pages/diary.js?v=cb6';
+import { renderSearch } from './pages/search.js?v=cb6';
+import { renderFriends } from './pages/friends.js?v=cb6';
+import { renderTheaters } from './pages/theaters.js?v=cb6';
+import { openSettings } from './settings.js?v=cb6';
+import { openDetail } from './detail.js?v=cb6';
+import { initNavSearch } from './navsearch.js?v=cb6';
 
 const app = document.getElementById('app');
 
@@ -69,6 +69,25 @@ navigate(window.location.hash);
 
 /* ── Re-render on data change ────────────────────── */
 window.addEventListener('cinestash:change', () => navigate(window.location.hash));
+
+/* ── Poster backfill ─────────────────────────────── */
+/* repair logs/watchlist/favorites saved without a working poster
+   (empty from a past detail-API outage, or old TMDB path fragments) */
+(async () => {
+  try {
+    const [{ moviesMissingPosters, setMoviePoster }, { details }] = await Promise.all([
+      import('./storage.js?v=cb6'),
+      import('./api.js?v=cb6'),
+    ]);
+    const ids = moviesMissingPosters().slice(0, 15);
+    for (const id of ids) {
+      try {
+        const m = await details(id);
+        if (m.poster) setMoviePoster(id, m.poster);
+      } catch { /* skip — will retry next load */ }
+    }
+  } catch { /* non-critical */ }
+})();
 
 /* ── Buttons ─────────────────────────────────────── */
 document.getElementById('settingsBtn')?.addEventListener('click', openSettings);

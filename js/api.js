@@ -58,8 +58,16 @@ async function apiFetch(params) {
     json = await tryFetch(`${PROXY}${encodeURIComponent(fallback.toString())}`);
   }
 
-  if (!json.ok && !json.description) throw new Error('API error');
+  /* valid shapes: search → {ok, description:[…]}; detail → {short:{…}, top:{…}} */
+  if (!json.ok && !json.description && !json.short) throw new Error('API error');
   return json;
+}
+
+/* decode the HTML entities the JSON-LD detail payload embeds in text */
+function decodeEntities(str) {
+  return String(str || '')
+    .replace(/&amp;/g, '&').replace(/&quot;/g, '"')
+    .replace(/&apos;|&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>');
 }
 
 export async function search(query) {
@@ -73,11 +81,37 @@ export async function search(query) {
 export async function details(id) {
   /* id is an IMDb tt string like "tt0468569" */
   const json = await apiFetch({ tt: id });
+
+  /* worker detail shape: JSON-LD under `short` + extras under `top` */
+  if (json.short) return normalizeDetail(json, id);
+
+  /* fallback shape: same {description:[…]} as search */
   const results = json.description;
   if (!Array.isArray(results) || !results.length) throw new Error('Not found');
-  /* find the exact match, or fall back to first result */
-  const match = results.find(r => r.imdbId === id) || results[0];
+  const match = results.find(r => r.imdbId === id || r['#IMDB_ID'] === id) || results[0];
   return normalize(match);
+}
+
+function normalizeDetail(json, id) {
+  const s   = json.short || {};
+  const top = json.top   || {};
+  const year = top.releaseYear?.year || (s.datePublished ? s.datePublished.slice(0, 4) : '');
+  const secs = top.runtime?.seconds;
+  return {
+    id:          json.imdbId || id,
+    title:       decodeEntities(s.name) || 'Untitled',
+    year:        String(year || ''),
+    poster:      s.image || '',
+    backdrop:    '',
+    voteAverage: s.aggregateRating?.ratingValue ?? null,
+    overview:    decodeEntities(s.description || ''),
+    runtime:     secs ? Math.round(secs / 60) : null,
+    genres:      Array.isArray(s.genre) ? s.genre : [],
+    tagline:     '',
+    director:    Array.isArray(s.director) ? (s.director[0]?.name || '') : '',
+    cast:        Array.isArray(s.actor) ? s.actor.map(a => a?.name).filter(Boolean).slice(0, 6) : [],
+    imdbUrl:     s.url ? (s.url.startsWith('http') ? s.url : `https://www.imdb.com${s.url}`) : `https://www.imdb.com/title/${id}/`,
+  };
 }
 
 /* ── Popular / Trending ──────────────────────────────────────────── */
@@ -131,12 +165,13 @@ export async function trending() {
 }
 
 async function fetchCuratedList(ids, cacheKey = CACHE_KEY) {
-  /* check cache first */
+  /* check cache first — ignore cached empties so a past outage self-heals */
   try {
     const cached = sessionStorage.getItem(cacheKey);
     if (cached) {
       const { data, ts, ids: cachedIds } = JSON.parse(cached);
-      if (Date.now() - ts < CACHE_TTL && JSON.stringify(cachedIds) === JSON.stringify(ids)) {
+      if (Array.isArray(data) && data.length &&
+          Date.now() - ts < CACHE_TTL && JSON.stringify(cachedIds) === JSON.stringify(ids)) {
         return data;
       }
     }
@@ -148,7 +183,10 @@ async function fetchCuratedList(ids, cacheKey = CACHE_KEY) {
     .filter(r => r.status === 'fulfilled' && r.value?.id)
     .map(r => r.value);
 
-  try { sessionStorage.setItem(cacheKey, JSON.stringify({ data: movies, ts: Date.now(), ids })); } catch {}
+  /* never cache an empty result */
+  if (movies.length) {
+    try { sessionStorage.setItem(cacheKey, JSON.stringify({ data: movies, ts: Date.now(), ids })); } catch {}
+  }
   return movies;
 }
 
@@ -177,4 +215,49 @@ const THEATER_CACHE_KEY = 'cinestash:theaters_v1';
 export async function inTheaters() {
   const ids = [...new Set(THEATER_IDS)];
   return fetchCuratedList(ids, THEATER_CACHE_KEY);
+}
+
+/* ── Coming Soon ─────────────────────────────────────────────────── */
+/* Upcoming theatrical releases. tt IDs for unreleased films are flaky,
+   so we resolve each title through search and keep the first result
+   from the right year — resilient even when IMDb pages move around.  */
+
+const COMING_SOON_TITLES = [
+  { q: 'The Odyssey Christopher Nolan',   minYear: 2026 },
+  { q: 'Moana live action',               minYear: 2026 },
+  { q: 'Spider-Man: Brand New Day',       minYear: 2026 },
+  { q: 'Avengers: Doomsday',              minYear: 2026 },
+  { q: 'Dune: Part Three',                minYear: 2026 },
+  { q: 'Shrek 5',                         minYear: 2026 },
+  { q: 'The Batman Part II',              minYear: 2027 },
+  { q: 'Star Wars: Starfighter',          minYear: 2027 },
+];
+
+const COMING_SOON_CACHE_KEY = 'cinestash:comingsoon_v1';
+
+export async function comingSoon() {
+  try {
+    const cached = sessionStorage.getItem(COMING_SOON_CACHE_KEY);
+    if (cached) {
+      const { data, ts } = JSON.parse(cached);
+      if (Array.isArray(data) && data.length && Date.now() - ts < CACHE_TTL) return data;
+    }
+  } catch {}
+
+  const settled = await Promise.allSettled(COMING_SOON_TITLES.map(async ({ q, minYear }) => {
+    const results = await search(q);
+    return results.find(m => parseInt(m.year, 10) >= minYear) || null;
+  }));
+
+  /* keep hits, drop misses, dedupe by id */
+  const seen = new Set();
+  const movies = settled
+    .filter(r => r.status === 'fulfilled' && r.value?.id)
+    .map(r => r.value)
+    .filter(m => !seen.has(m.id) && seen.add(m.id));
+
+  if (movies.length) {
+    try { sessionStorage.setItem(COMING_SOON_CACHE_KEY, JSON.stringify({ data: movies, ts: Date.now() })); } catch {}
+  }
+  return movies;
 }

@@ -314,6 +314,28 @@ export function setPrivacy(priv) {
   persist();
 }
 
+/* ── Poster repair ────────────────────────────── */
+/* missing = empty, or a TMDB-era path fragment ("/abc.jpg") that no longer resolves */
+const posterBroken = (p) => !p || String(p).startsWith('/');
+
+export function moviesMissingPosters() {
+  const ids = new Set();
+  state.logs.forEach(l => { if (posterBroken(l.movie?.poster)) ids.add(l.movie.id); });
+  state.watchlist.forEach(m => { if (posterBroken(m.poster)) ids.add(m.id); });
+  Object.values(state.favoriteMovies).forEach(m => { if (posterBroken(m.poster)) ids.add(m.id); });
+  ids.delete(undefined); ids.delete('');
+  return [...ids];
+}
+
+export function setMoviePoster(movieId, posterUrl) {
+  if (!posterUrl) return;
+  let touched = false;
+  state.logs.forEach(l => { if (l.movie?.id === movieId && posterBroken(l.movie.poster)) { l.movie.poster = posterUrl; touched = true; } });
+  state.watchlist.forEach(m => { if (m.id === movieId && posterBroken(m.poster)) { m.poster = posterUrl; touched = true; } });
+  Object.values(state.favoriteMovies).forEach(m => { if (m.id === movieId && posterBroken(m.poster)) { m.poster = posterUrl; touched = true; } });
+  if (touched) persist();
+}
+
 /* ── Movie Nights ─────────────────────────────── */
 export const getMovieNights = () =>
   [...(state.movieNights || [])].sort((a, b) => new Date(a.date) - new Date(b.date));

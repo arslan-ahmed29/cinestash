@@ -1,17 +1,26 @@
 /* ░░ detail.js — movie detail modal + hot takes ░░ */
 
-import { details, poster, backdrop } from './api.js?v=cb5';
+import { details, poster, backdrop } from './api.js?v=cb6';
 import { getLogFor, getAllLogsFor, toggleWatchlist, toggleFavorite,
-         isWatchlisted, isFavorite, getHotTakes, addHotTake, voteHotTake } from './storage.js?v=cb5';
-import { openModal, closeModal, toast, starsHtml, esc } from './ui.js?v=cb5';
-import { openLogForm } from './logform.js?v=cb5';
-import { hamzahTrackerHtml, bindHamzahTrackers } from './hamzahtracker.js?v=cb5';
+         isWatchlisted, isFavorite, getHotTakes, addHotTake, voteHotTake } from './storage.js?v=cb6';
+import { openModal, closeModal, toast, starsHtml, esc } from './ui.js?v=cb6';
+import { openLogForm } from './logform.js?v=cb6';
+import { hamzahTrackerHtml, bindHamzahTrackers } from './hamzahtracker.js?v=cb6';
 
 export async function openDetail(movie) {
   openModal(skeletonHtml(movie));
   bindClose();
   let m = movie;
-  try { m = await details(movie.id); } catch { /* use slim data */ }
+  try {
+    const fetched = await details(movie.id);
+    /* merge, never letting a thinner API response erase what we had */
+    m = {
+      ...fetched,
+      title:  (fetched.title && fetched.title !== 'Untitled') ? fetched.title : movie.title,
+      year:   fetched.year   || movie.year   || '',
+      poster: fetched.poster || movie.poster || '',
+    };
+  } catch { /* use slim data */ }
   renderDetail(m);
 }
 

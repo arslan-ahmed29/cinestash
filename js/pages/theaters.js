@@ -4,12 +4,14 @@
    cinemas near that point are pulled from OpenStreetMap (Overpass API,
    free/no key) and listed in-app — not just a link out to Google. */
 
-import { inTheaters } from '../api.js?v=cb5';
-import { loaderHtml, esc, toast, openModal, closeModal } from '../ui.js?v=cb5';
-import { openDetail } from '../detail.js?v=cb5';
+import { inTheaters, comingSoon } from '../api.js?v=cb6';
+import { loaderHtml, esc, toast, openModal, closeModal,
+         cardHtml, carouselHtml, attachCarouselNav } from '../ui.js?v=cb6';
+import { openDetail } from '../detail.js?v=cb6';
+import { bindCardEvents } from './home.js?v=cb6';
 import { getSettings, updateSettings,
          getMovieNights, createMovieNight, cancelMovieNight,
-         getDemoFriends, isBlocked } from '../storage.js?v=cb5';
+         getDemoFriends, isBlocked } from '../storage.js?v=cb6';
 
 const RADII = [5, 10, 25, 50];
 const OVERPASS_ENDPOINTS = [
@@ -62,9 +64,11 @@ export async function renderTheaters(app) {
 
   <div id="movieNightsSection" style="margin-top:24px"></div>
   <div id="nearbyTheatersSection" style="margin-top:20px"></div>
-  <div id="theatersContent" style="margin-top:14px">${loaderHtml}</div>`;
+  <div id="theatersContent" style="margin-top:14px">${loaderHtml}</div>
+  <div id="comingSoonSection" style="margin-top:32px"></div>`;
 
   renderMovieNights();
+  loadComingSoon();
 
   document.getElementById('zipForm')?.addEventListener('submit', async e => {
     e.preventDefault();
@@ -134,6 +138,33 @@ export async function renderTheaters(app) {
     const card = e.target.closest('.theater-card[data-movie-id]');
     if (card) openDetail({ id: card.dataset.movieId, title: card.dataset.title, year: card.dataset.year, poster: card.dataset.poster });
   });
+}
+
+/* ── Coming Soon carousel ─────────────────────────────────────────── */
+async function loadComingSoon() {
+  const el = document.getElementById('comingSoonSection');
+  if (!el) return;
+  el.innerHTML = `
+    <h2 style="font-size:17px;font-weight:700;letter-spacing:-0.2px;margin-bottom:12px">Coming Soon 🔜</h2>
+    <div class="loader" style="padding:32px 0"><div class="loader__ring"></div></div>`;
+
+  let movies = [];
+  try { movies = await comingSoon(); } catch { movies = []; }
+
+  /* page may have been navigated away while loading */
+  const target = document.getElementById('comingSoonSection');
+  if (!target) return;
+
+  if (!movies.length) {
+    target.innerHTML = '';
+    return;
+  }
+
+  target.innerHTML = `
+    <h2 style="font-size:17px;font-weight:700;letter-spacing:-0.2px;margin-bottom:12px">Coming Soon 🔜</h2>
+    ${carouselHtml('comingSoonCarousel', movies.map(m => cardHtml(m)))}`;
+  attachCarouselNav('comingSoonCarousel');
+  bindCardEvents(target);
 }
 
 /* ── Real nearby theaters (OpenStreetMap Overpass, free, no key) ──── */
