@@ -1,8 +1,8 @@
 /* ░░ logform.js — log / edit a film ░░ */
 
-import { poster } from './api.js?v=cb3';
-import { logMovie, deleteLog } from './storage.js?v=cb3';
-import { openModal, closeModal, toast, esc } from './ui.js?v=cb3';
+import { poster } from './api.js?v=cb4';
+import { logMovie, deleteLog } from './storage.js?v=cb4';
+import { openModal, closeModal, toast, esc } from './ui.js?v=cb4';
 
 export function openLogForm(movie, existingLog = null) {
   const today = new Date().toISOString().slice(0, 10);

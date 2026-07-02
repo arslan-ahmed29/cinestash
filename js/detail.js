@@ -1,11 +1,11 @@
 /* ░░ detail.js — movie detail modal + hot takes ░░ */
 
-import { details, poster, backdrop } from './api.js?v=cb3';
+import { details, poster, backdrop } from './api.js?v=cb4';
 import { getLogFor, getAllLogsFor, toggleWatchlist, toggleFavorite,
-         isWatchlisted, isFavorite, getHotTakes, addHotTake, voteHotTake } from './storage.js?v=cb3';
-import { openModal, closeModal, toast, starsHtml, esc } from './ui.js?v=cb3';
-import { openLogForm } from './logform.js?v=cb3';
-import { hamzahTrackerHtml, bindHamzahTrackers } from './hamzahtracker.js?v=cb3';
+         isWatchlisted, isFavorite, getHotTakes, addHotTake, voteHotTake } from './storage.js?v=cb4';
+import { openModal, closeModal, toast, starsHtml, esc } from './ui.js?v=cb4';
+import { openLogForm } from './logform.js?v=cb4';
+import { hamzahTrackerHtml, bindHamzahTrackers } from './hamzahtracker.js?v=cb4';
 
 export async function openDetail(movie) {
   openModal(skeletonHtml(movie));

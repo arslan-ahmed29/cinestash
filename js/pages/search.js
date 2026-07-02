@@ -1,8 +1,8 @@
 /* ░░ pages/search.js — Full search results page ░░ */
 
-import { search as apiSearch } from '../api.js?v=cb3';
-import { cardHtml, loaderHtml, esc } from '../ui.js?v=cb3';
-import { bindCardEvents } from './home.js?v=cb3';
+import { search as apiSearch } from '../api.js?v=cb4';
+import { cardHtml, loaderHtml, esc } from '../ui.js?v=cb4';
+import { bindCardEvents } from './home.js?v=cb4';
 
 export async function renderSearch(app, query) {
   app.innerHTML = `

@@ -1,7 +1,7 @@
 /* ░░ searchpicker.js — modal to find a film and do something with it ░░ */
 
-import { search } from './api.js?v=cb3';
-import { openModal, closeModal, esc } from './ui.js?v=cb3';
+import { search } from './api.js?v=cb4';
+import { openModal, closeModal, esc } from './ui.js?v=cb4';
 
 /* opens a search modal; calls onPick(movie) when a result is chosen */
 export function openSearchPicker({ title = 'Add a film', hint = 'Search every film ever made…', onPick } = {}) {

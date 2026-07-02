@@ -4,10 +4,12 @@
    cinemas near that point are pulled from OpenStreetMap (Overpass API,
    free/no key) and listed in-app — not just a link out to Google. */
 
-import { inTheaters } from '../api.js?v=cb3';
-import { loaderHtml, esc, toast } from '../ui.js?v=cb3';
-import { openDetail } from '../detail.js?v=cb3';
-import { getSettings, updateSettings } from '../storage.js?v=cb3';
+import { inTheaters } from '../api.js?v=cb4';
+import { loaderHtml, esc, toast, openModal, closeModal } from '../ui.js?v=cb4';
+import { openDetail } from '../detail.js?v=cb4';
+import { getSettings, updateSettings,
+         getMovieNights, createMovieNight, cancelMovieNight,
+         getDemoFriends, isBlocked } from '../storage.js?v=cb4';
 
 const RADII = [5, 10, 25, 50];
 const OVERPASS_ENDPOINTS = [
@@ -19,6 +21,10 @@ const OVERPASS_ENDPOINTS = [
 let zip    = '';
 let radius = 25;
 let coords = null; // { lat, lng } once the ZIP is geocoded
+
+/* remembered for the movie-night planner's pickers */
+let lastMovies = [];
+let lastVenues = [];
 
 export async function renderTheaters(app) {
   const s = getSettings();
@@ -54,8 +60,11 @@ export async function renderTheaters(app) {
     </form>
   </div>
 
+  <div id="movieNightsSection" style="margin-top:24px"></div>
   <div id="nearbyTheatersSection" style="margin-top:20px"></div>
   <div id="theatersContent" style="margin-top:14px">${loaderHtml}</div>`;
+
+  renderMovieNights();
 
   document.getElementById('zipForm')?.addEventListener('submit', async e => {
     e.preventDefault();
@@ -99,6 +108,7 @@ export async function renderTheaters(app) {
   /* films */
   let movies = [];
   try { movies = await inTheaters(); } catch { movies = []; }
+  lastMovies = movies;
 
   const content = document.getElementById('theatersContent');
   content?.querySelector('.loader')?.remove();
@@ -162,9 +172,174 @@ async function loadNearbyTheaters() {
     return;
   }
 
+  lastVenues = venues;
   el.innerHTML = `
     <h2 style="font-size:17px;font-weight:700;letter-spacing:-0.2px;margin-bottom:12px">Theaters Near You</h2>
     <div class="venues fade-in">${venues.map(venueCard).join('')}</div>`;
+}
+
+/* ── Movie Nights: plan a night out with friends ──────────────────── */
+function renderMovieNights() {
+  const el = document.getElementById('movieNightsSection');
+  if (!el) return;
+  const nights = getMovieNights();
+  const now = new Date(); now.setHours(0, 0, 0, 0);
+  const upcoming = nights.filter(n => new Date(n.date + 'T23:59') >= now);
+
+  el.innerHTML = `
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px">
+    <h2 style="font-size:17px;font-weight:700;letter-spacing:-0.2px;margin:0">Movie Nights 🎟️</h2>
+    <button class="btn btn--primary btn--sm" id="planNightBtn">+ Plan a night</button>
+  </div>
+  ${upcoming.length
+    ? `<div class="nights fade-in">${upcoming.map(nightCard).join('')}</div>`
+    : `<p style="font-size:13.5px;color:var(--label-2);margin:0">No nights planned — pick a film below and rally the crew.</p>`}`;
+
+  document.getElementById('planNightBtn')?.addEventListener('click', openPlanModal);
+
+  el.querySelectorAll('[data-cancel-night]').forEach(btn => btn.addEventListener('click', () => {
+    if (!confirm('Cancel this movie night?')) return;
+    cancelMovieNight(btn.dataset.cancelNight);
+    toast('Movie night cancelled', '🗑');
+    renderMovieNights();
+  }));
+
+  el.querySelectorAll('[data-copy-night]').forEach(btn => btn.addEventListener('click', async () => {
+    const night = getMovieNights().find(n => n.id === btn.dataset.copyNight);
+    if (!night) return;
+    try {
+      await navigator.clipboard.writeText(inviteText(night));
+      toast('Invite copied — paste it in the group chat', '📋');
+    } catch { toast('Couldn\'t copy — long-press to copy manually', '⚠️'); }
+  }));
+}
+
+function nightCard(night) {
+  const friends = getDemoFriends();
+  const d = new Date(night.date + 'T12:00');
+  const dateLabel = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  const chips = (night.invitees || []).map(id => {
+    const f = friends.find(fr => fr.id === id);
+    const status = night.rsvps?.[id] || 'maybe';
+    const icon = status === 'in' ? '✅' : status === 'out' ? '❌' : '🤔';
+    return `<span class="rsvp-chip rsvp-chip--${status}" title="${esc(f?.displayName || id)}: ${status}">${f?.emoji || '👤'} ${icon}</span>`;
+  }).join('');
+  const inCount = Object.values(night.rsvps || {}).filter(v => v === 'in').length;
+
+  return `
+  <div class="night-card">
+    <div class="night-card__poster" style="${night.movie?.poster ? `background-image:url('${night.movie.poster}')` : 'background-color:var(--fill)'}"></div>
+    <div class="night-card__body">
+      <div class="night-card__title">${esc(night.movie?.title || 'Movie night')}</div>
+      <div class="night-card__meta">${dateLabel}${night.time ? ` · ${esc(night.time)}` : ''}${night.theater ? ` · ${esc(night.theater)}` : ''}</div>
+      <div class="night-card__rsvps">${chips || '<span style="font-size:12px;color:var(--label-3)">No invites sent</span>'}
+        ${night.invitees?.length ? `<span class="night-card__count">${inCount}/${night.invitees.length} in</span>` : ''}
+      </div>
+    </div>
+    <div class="night-card__actions">
+      <button class="btn btn--sm btn--tinted" data-copy-night="${night.id}">Copy invite</button>
+      <button class="btn btn--sm btn--ghost" data-cancel-night="${night.id}" style="color:var(--sys-red)">Cancel</button>
+    </div>
+  </div>`;
+}
+
+function inviteText(night) {
+  const d = new Date(night.date + 'T12:00');
+  const dateLabel = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  return `🎬 Movie night: ${night.movie?.title || 'TBD'}\n📅 ${dateLabel}${night.time ? ` at ${night.time}` : ''}${night.theater ? `\n📍 ${night.theater}` : ''}\n\nYou in?`;
+}
+
+function openPlanModal() {
+  const friends = getDemoFriends().filter(f => !isBlocked(f.id));
+  const today = new Date().toISOString().slice(0, 10);
+
+  openModal(`
+  <div class="dialog">
+    <h2 class="dialog__title">Plan a Movie Night 🎟️</h2>
+    <p class="dialog__sub">Pick the film, the night, and the crew — everyone gets an RSVP.</p>
+
+    <div class="field">
+      <label class="field__label" for="nightMovie">Film</label>
+      <select class="input" id="nightMovie">
+        ${lastMovies.length
+          ? lastMovies.map((m, i) => `<option value="${i}">${esc(m.title)}${m.year ? ` (${m.year})` : ''}</option>`).join('')
+          : '<option value="">Loading films… reopen in a sec</option>'}
+      </select>
+    </div>
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <div class="field" style="flex:1;min-width:140px">
+        <label class="field__label" for="nightDate">Date</label>
+        <input class="input" type="date" id="nightDate" value="${today}" min="${today}">
+      </div>
+      <div class="field" style="flex:1;min-width:120px">
+        <label class="field__label" for="nightTime">Time</label>
+        <input class="input" type="time" id="nightTime" value="19:30">
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="nightTheater">Theater</label>
+      ${lastVenues.length
+        ? `<select class="input" id="nightTheater">
+            ${lastVenues.map(v => `<option value="${esc(v.name)}">${esc(v.name)} (${v.distanceMi.toFixed(1)} mi)</option>`).join('')}
+            <option value="">Somewhere else…</option>
+          </select>`
+        : `<input class="input" id="nightTheater" placeholder="e.g. AMC Century 15 — set your ZIP above to pick from nearby theaters">`}
+    </div>
+
+    <div class="field">
+      <label class="field__label">Invite the crew</label>
+      <div class="invite-list">
+        ${friends.map(f => `
+        <label class="invite-row">
+          <input type="checkbox" value="${f.id}" checked>
+          <span class="invite-row__avatar">${f.emoji}</span>
+          <span class="invite-row__name">${esc(f.displayName)}</span>
+        </label>`).join('')}
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:20px">
+      <button class="btn btn--primary" id="createNightBtn" style="flex:1">Send invites 🚀</button>
+      <button class="btn btn--ghost" id="cancelPlanBtn">Cancel</button>
+    </div>
+  </div>`);
+
+  document.getElementById('cancelPlanBtn')?.addEventListener('click', closeModal);
+  document.getElementById('createNightBtn')?.addEventListener('click', () => {
+    const movieIdx = document.getElementById('nightMovie')?.value;
+    const movie = lastMovies[parseInt(movieIdx, 10)];
+    if (!movie) { toast('Pick a film first', '⚠️'); return; }
+    const date = document.getElementById('nightDate')?.value;
+    if (!date) { toast('Pick a date', '⚠️'); return; }
+    const time = document.getElementById('nightTime')?.value || '';
+    const theater = document.getElementById('nightTheater')?.value || '';
+    const invitees = [...document.querySelectorAll('.invite-row input:checked')].map(cb => cb.value);
+
+    const night = createMovieNight({
+      movie: { id: movie.id, title: movie.title, year: movie.year, poster: movie.poster },
+      date, time, theater, invitees,
+    });
+    closeModal();
+    renderMovieNights();
+
+    /* announce the RSVPs as they "come in" */
+    const friendsAll = getDemoFriends();
+    const responders = Object.entries(night.rsvps);
+    responders.forEach(([id, status], i) => {
+      const f = friendsAll.find(fr => fr.id === id);
+      if (!f) return;
+      setTimeout(() => {
+        const msg = status === 'in' ? `${f.displayName} is IN 🎉`
+                  : status === 'maybe' ? `${f.displayName} is a maybe 🤔`
+                  : `${f.displayName} can't make it 💔`;
+        toast(msg, f.emoji);
+        renderMovieNights();
+      }, 900 + i * 1300);
+    });
+    toast('Invites sent!', '🎟️');
+  });
 }
 
 async function fetchNearbyTheaters(lat, lng, radiusMiles) {

@@ -1,10 +1,11 @@
 /* ░░ pages/friends.js — Friends activity feed ░░ */
 
 import { getDemoFriends, getFollowing, follow, unfollow, isFollowing, isBlocked,
-         getReviewReaction, toggleReviewLike, throwTomatoAt } from '../storage.js?v=cb3';
-import { poster } from '../api.js?v=cb3';
-import { starsHtml, esc, toast, openModal, closeModal } from '../ui.js?v=cb3';
-import { openDetail } from '../detail.js?v=cb3';
+         getReviewReaction, toggleReviewLike, throwTomatoAt,
+         getLogs, getLogFor } from '../storage.js?v=cb4';
+import { poster } from '../api.js?v=cb4';
+import { starsHtml, esc, toast, openModal, closeModal } from '../ui.js?v=cb4';
+import { openDetail } from '../detail.js?v=cb4';
 
 export function renderFriends(app) {
   const friends   = getDemoFriends().filter(f => !isBlocked(f.id));
@@ -29,6 +30,18 @@ export function renderFriends(app) {
     ${renderSuggested(friends, following, '')}
   </div>
 
+  <!-- taste match -->
+  <div style="margin-top:32px">
+    <h2 style="font-size:17px;font-weight:700;letter-spacing:-0.2px;margin-bottom:4px">Taste Match</h2>
+    <p style="font-size:13px;color:var(--label-2);margin-bottom:14px">How close is your taste to each friend's — based on films you've both logged</p>
+    <div class="match-grid fade-in" id="matchGrid">
+      ${friends.map(matchCard).join('')}
+    </div>
+  </div>
+
+  <!-- blind spots -->
+  ${blindSpotsHtml(friends)}
+
   <!-- feed -->
   <div style="margin-top:32px">
     <h2 style="font-size:17px;font-weight:700;letter-spacing:-0.2px;margin-bottom:14px">Recent Activity</h2>
@@ -36,6 +49,18 @@ export function renderFriends(app) {
       ${buildFeed(friends, following)}
     </div>
   </div>`;
+
+  /* taste-match card click → detail modal */
+  document.getElementById('matchGrid')?.addEventListener('click', e => {
+    const card = e.target.closest('.match-card[data-friend-id]');
+    if (card) openMatchDetail(card.dataset.friendId);
+  });
+
+  /* blind-spot rows open the movie */
+  document.getElementById('blindSpotsList')?.addEventListener('click', e => {
+    const row = e.target.closest('.blind-spot[data-movie-id]');
+    if (row) openDetail({ id: row.dataset.movieId, title: row.dataset.title, year: row.dataset.year, poster: row.dataset.poster });
+  });
 
   /* follow/unfollow buttons */
   document.getElementById('suggestedList')?.addEventListener('click', e => {
@@ -67,6 +92,134 @@ export function renderFriends(app) {
 
 /* friends minus anyone blocked */
 function activeFriends() { return getDemoFriends().filter(f => !isBlocked(f.id)); }
+
+/* ── Taste matching ──────────────────────────────── */
+/* Compare your logs with a friend's: shared films score by how close
+   your ratings are; more overlap = more confidence in the number.   */
+function computeMatch(friend) {
+  const myLogs = getLogs();
+  const mine = new Map(myLogs.map(l => [l.movie.id, l]));
+  const shared = [];
+  for (const flog of friend.logs) {
+    const ulog = mine.get(flog.movie.id);
+    if (ulog) shared.push({ movie: flog.movie, yours: ulog.rating, theirs: flog.rating });
+  }
+  if (!shared.length) return { score: null, shared, recs: friendRecs(friend, mine) };
+
+  const closeness = shared.map(s =>
+    (s.yours != null && s.theirs != null) ? 1 - Math.abs(s.yours - s.theirs) / 5 : 0.5);
+  const avgClose = closeness.reduce((a, b) => a + b, 0) / closeness.length;
+  const overlap  = Math.min(1, shared.length / 5);
+  const score    = Math.round((0.65 * avgClose + 0.35 * overlap) * 100);
+  return { score, shared, recs: friendRecs(friend, mine) };
+}
+
+/* films the friend rated 4+ that you haven't logged — "you'd both love" */
+function friendRecs(friend, mine) {
+  return friend.logs
+    .filter(l => (l.rating ?? 0) >= 4 && !mine.has(l.movie.id))
+    .sort((a, b) => b.rating - a.rating);
+}
+
+function matchCard(friend) {
+  const { score, shared } = computeMatch(friend);
+  const pct   = score ?? 0;
+  const hue   = score == null ? 'var(--fill)' : `conic-gradient(var(--accent) ${pct * 3.6}deg, var(--fill) 0deg)`;
+  const label = score == null ? '—' : `${score}%`;
+  const sub   = score == null
+    ? 'No shared films yet'
+    : `${shared.length} shared film${shared.length !== 1 ? 's' : ''}`;
+  return `
+  <div class="match-card" data-friend-id="${friend.id}" role="button" tabindex="0">
+    <div class="match-ring" style="background:${hue}"><span>${label}</span></div>
+    <div class="match-card__name">${friend.emoji} ${esc(friend.displayName)}</div>
+    <div class="match-card__sub">${sub}</div>
+  </div>`;
+}
+
+function openMatchDetail(friendId) {
+  const friend = getDemoFriends().find(f => f.id === friendId);
+  if (!friend) return;
+  const { score, shared, recs } = computeMatch(friend);
+
+  openModal(`
+  <div class="dialog">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <h2 class="dialog__title" style="margin:0">${friend.emoji} ${esc(friend.displayName)}</h2>
+      <button class="btn btn--ghost btn--sm" id="matchModalClose">Done</button>
+    </div>
+    <p class="dialog__sub">${score == null
+      ? 'Log some films you\'ve both seen to unlock your match score.'
+      : `You're a <strong style="color:var(--accent)">${score}% taste match</strong> across ${shared.length} shared film${shared.length !== 1 ? 's' : ''}.`}</p>
+
+    ${shared.length ? `
+    <h3 class="match-section-title">Films you've both seen</h3>
+    <div class="ios-list" style="margin-bottom:20px">
+      ${shared.map(s => `
+      <div class="ios-list__item">
+        <div class="ios-list__info">
+          <div class="ios-list__name">${esc(s.movie.title)}</div>
+          <div class="ios-list__sub">You: ${s.yours != null ? starsHtml(s.yours) : 'unrated'} · Them: ${s.theirs != null ? starsHtml(s.theirs) : 'unrated'}</div>
+        </div>
+      </div>`).join('')}
+    </div>` : ''}
+
+    ${recs.length ? `
+    <h3 class="match-section-title">You'd probably love</h3>
+    <p style="font-size:12.5px;color:var(--label-2);margin-bottom:10px">Films ${esc(friend.displayName)} rated ★4+ that you haven't logged</p>
+    <div class="ios-list" id="matchRecsList">
+      ${recs.map(l => `
+      <div class="ios-list__item" data-movie-id="${l.movie.id}" data-title="${esc(l.movie.title)}" data-year="${esc(l.movie.year)}" data-poster="${esc(l.movie.poster || '')}" role="button" tabindex="0" style="cursor:pointer">
+        <div class="ios-list__info">
+          <div class="ios-list__name">${esc(l.movie.title)} <span style="color:var(--label-3);font-weight:400">${l.movie.year}</span></div>
+          <div class="ios-list__sub">${starsHtml(l.rating)}${l.review ? ` · "${esc(l.review)}"` : ''}</div>
+        </div>
+        <span style="color:var(--accent);font-size:18px">›</span>
+      </div>`).join('')}
+    </div>` : `<p style="font-size:13px;color:var(--label-2)">No recommendations yet — they haven't loved anything you're missing.</p>`}
+  </div>`);
+
+  document.getElementById('matchModalClose')?.addEventListener('click', closeModal);
+  document.getElementById('matchRecsList')?.addEventListener('click', e => {
+    const row = e.target.closest('[data-movie-id]');
+    if (!row) return;
+    closeModal();
+    openDetail({ id: row.dataset.movieId, title: row.dataset.title, year: row.dataset.year, poster: row.dataset.poster });
+  });
+}
+
+/* ── Blind spots: films 2+ friends have seen but you haven't ── */
+function blindSpotsHtml(friends) {
+  const counts = new Map(); // movieId -> { movie, watchers: [] }
+  for (const f of friends) {
+    for (const log of f.logs) {
+      if (getLogFor(log.movie.id)) continue; // you've seen it
+      const entry = counts.get(log.movie.id) || { movie: log.movie, watchers: [] };
+      entry.watchers.push(f);
+      counts.set(log.movie.id, entry);
+    }
+  }
+  const spots = [...counts.values()]
+    .filter(e => e.watchers.length >= 2)
+    .sort((a, b) => b.watchers.length - a.watchers.length);
+  if (!spots.length) return '';
+
+  return `
+  <div style="margin-top:32px">
+    <h2 style="font-size:17px;font-weight:700;letter-spacing:-0.2px;margin-bottom:4px">Your Blind Spots 🙈</h2>
+    <p style="font-size:13px;color:var(--label-2);margin-bottom:14px">Films your friends have all seen — and you haven't</p>
+    <div class="ios-list fade-in" id="blindSpotsList">
+      ${spots.map(({ movie, watchers }) => `
+      <div class="ios-list__item blind-spot" data-movie-id="${movie.id}" data-title="${esc(movie.title)}" data-year="${esc(movie.year)}" data-poster="${esc(movie.poster || '')}" role="button" tabindex="0" style="cursor:pointer">
+        <div class="ios-list__info">
+          <div class="ios-list__name">${esc(movie.title)} <span style="color:var(--label-3);font-weight:400">${movie.year}</span></div>
+          <div class="ios-list__sub">Seen by ${watchers.map(w => w.emoji).join(' ')} ${watchers.length} friend${watchers.length !== 1 ? 's' : ''} — not you</div>
+        </div>
+        <span style="color:var(--accent);font-size:18px">›</span>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
 
 function renderSuggested(friends, following, query) {
   const q = (query || '').trim().toLowerCase();

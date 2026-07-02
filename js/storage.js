@@ -100,6 +100,7 @@ const DEFAULTS = () => ({
   following: ['friend_saqib', 'friend_01', 'friend_02'],
   followers: ['friend_03', 'friend_04'],
   blocked: [],
+  movieNights: [],
   demoFriendsSeeded: true,
 });
 
@@ -120,6 +121,7 @@ function load() {
       following: parsed.following ?? ['friend_saqib','friend_01','friend_02'],
       followers: parsed.followers ?? ['friend_03','friend_04'],
       blocked:   parsed.blocked   ?? [],
+      movieNights: parsed.movieNights ?? [],
     };
   } catch { return DEFAULTS(); }
 }
@@ -309,6 +311,34 @@ export const isBlocked    = (id) => (state.blocked || []).includes(id);
 export const isPrivate    = () => !!(state.settings?.isPrivate);
 export function setPrivacy(priv) {
   state.settings = { ...state.settings, isPrivate: !!priv };
+  persist();
+}
+
+/* ── Movie Nights ─────────────────────────────── */
+export const getMovieNights = () =>
+  [...(state.movieNights || [])].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+export function createMovieNight({ movie, date, time, theater, invitees }) {
+  /* demo friends RSVP on the spot: mostly in, sometimes maybe/out */
+  const rsvps = {};
+  (invitees || []).forEach(id => {
+    const r = Math.random();
+    rsvps[id] = r < 0.65 ? 'in' : r < 0.85 ? 'maybe' : 'out';
+  });
+  if (invitees?.length && !Object.values(rsvps).includes('in')) rsvps[invitees[0]] = 'in';
+
+  const night = {
+    id: `night_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+    movie, date, time: time || '', theater: theater || '',
+    invitees: invitees || [], rsvps,
+    createdAt: Date.now(),
+  };
+  state.movieNights = [...(state.movieNights || []), night];
+  persist(); return night;
+}
+
+export function cancelMovieNight(id) {
+  state.movieNights = (state.movieNights || []).filter(n => n.id !== id);
   persist();
 }
 

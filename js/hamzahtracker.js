@@ -1,7 +1,7 @@
 /* ░░ hamzahtracker.js — draggable "how late was Hamzah" meter ░░
    A 🚗 you drag along a road to log how late Hamzah showed up. */
 
-import { setHamzahLate } from './storage.js?v=cb3';
+import { setHamzahLate } from './storage.js?v=cb4';
 
 const LABELS = [
   { max: 4,   text: 'Right on time 🎬' },
