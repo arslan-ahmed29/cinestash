@@ -1,8 +1,8 @@
 /* ░░ navsearch.js — live search dropdown in the navbar ░░ */
 
-import { search } from './api.js';
-import { poster } from './api.js';
-import { esc } from './ui.js';
+import { search } from './api.js?v=cb1';
+import { poster } from './api.js?v=cb1';
+import { esc } from './ui.js?v=cb1';
 
 export function initNavSearch(onSelect, onEnter) {
   const form    = document.getElementById('navSearch');

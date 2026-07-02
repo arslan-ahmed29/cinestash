@@ -3,10 +3,10 @@
    showtimes open in Google for that ZIP and the "Theaters near me" map view
    is zoomed to roughly match your radius (ZIP is geocoded, not your device). */
 
-import { inTheaters } from '../api.js';
-import { loaderHtml, esc, toast } from '../ui.js';
-import { openDetail } from '../detail.js';
-import { getSettings, updateSettings } from '../storage.js';
+import { inTheaters } from '../api.js?v=cb1';
+import { loaderHtml, esc, toast } from '../ui.js?v=cb1';
+import { openDetail } from '../detail.js?v=cb1';
+import { getSettings, updateSettings } from '../storage.js?v=cb1';
 
 const RADII = [5, 10, 25, 50];
 

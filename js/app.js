@@ -1,15 +1,15 @@
 /* ░░ app.js — router + bootstrap ░░ */
 
-import { initTheme, toggleTheme, updateToggleBtn } from './themes.js';
-import { renderHome } from './pages/home.js';
-import { renderWatchlist } from './pages/watchlist.js';
-import { renderDiary } from './pages/diary.js';
-import { renderSearch } from './pages/search.js';
-import { renderFriends } from './pages/friends.js';
-import { renderTheaters } from './pages/theaters.js';
-import { openSettings } from './settings.js';
-import { openDetail } from './detail.js';
-import { initNavSearch } from './navsearch.js';
+import { initTheme, toggleTheme, updateToggleBtn } from './themes.js?v=cb1';
+import { renderHome } from './pages/home.js?v=cb1';
+import { renderWatchlist } from './pages/watchlist.js?v=cb1';
+import { renderDiary } from './pages/diary.js?v=cb1';
+import { renderSearch } from './pages/search.js?v=cb1';
+import { renderFriends } from './pages/friends.js?v=cb1';
+import { renderTheaters } from './pages/theaters.js?v=cb1';
+import { openSettings } from './settings.js?v=cb1';
+import { openDetail } from './detail.js?v=cb1';
+import { initNavSearch } from './navsearch.js?v=cb1';
 
 const app = document.getElementById('app');
 
